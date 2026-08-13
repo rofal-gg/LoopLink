@@ -41,3 +41,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# environment (jangan commit key asli; template .env.local.example tetap di-commit)
+.env.local
+.env*.local
+!.env.local.example

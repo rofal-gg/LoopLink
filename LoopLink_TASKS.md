@@ -22,20 +22,20 @@
 
 *Delegasikan seluruh fase ini ke `looplink-database-supabase`*
 
-> ⚠️ Status: **belum dikerjakan** — database Supabase masih kosong (0 tabel, 0 migration). Tidak ada task di fase ini yang bisa dicentang. Rincian di `PROGRESS.md`.
+> ✅ Status: **selesai** — 7 migration (001 tabel inti, 002 tabel pendukung, 003 RLS, 004 revoke, 005 RPC, 006 index, 007 perbaikan keamanan) + `seed.sql` sudah di-apply ke Supabase remote dan terverifikasi. Detail di `PROGRESS.md`.
 
-- [ ] Buat migration tabel inti: `profiles`, `listings`, `listing_photos`, `kategori_kecocokan` **[Wajib]**
-- [ ] Buat migration tabel pendukung: `riwayat_klaim`, `laporan`, `riwayat_pencarian`, `riwayat_pencarian_hasil` **[GTM]**
-- [ ] Aktifkan RLS di semua tabel **[Wajib]**
-- [ ] Tulis policy SELECT/INSERT/UPDATE/DELETE sesuai tabel kebijakan RLS di Tahap 3 **[Wajib]**
-- [ ] Cabut hak UPDATE langsung kolom `status`/`diklaim_oleh`/`dibatalkan_oleh` dari role `authenticated` **[Wajib]**
-- [ ] Buat RPC function `claim_listing` **[Wajib]**
-- [ ] Buat RPC function `complete_listing` **[Wajib]**
-- [ ] Buat RPC function `cancel_claim` **[Wajib]**
-- [ ] Buat index lokasi (`lokasi_lat`, `lokasi_lng`) dan status pada `listings` **[Wajib]**
-- [ ] Isi seed data `kategori_kecocokan` (baseline dari `looplink-ai-ml-integration.md`) **[Wajib]**
-- [ ] Buat seed data akun dummy (5-6 akun, lokasi & kategori bervariasi) untuk demo **[Wajib]**
-- [ ] Test manual: jalankan `claim_listing` dari 2 akun berbeda, pastikan listing sendiri tidak bisa diklaim **[Wajib]**
+- [x] Buat migration tabel inti: `profiles`, `listings`, `listing_photos`, `kategori_kecocokan` **[Wajib]** — migration `202608140001_tabel_inti.sql`
+- [x] Buat migration tabel pendukung: `riwayat_klaim`, `laporan`, `riwayat_pencarian`, `riwayat_pencarian_hasil` **[GTM]** — migration `202608140002_tabel_pendukung.sql`
+- [x] Aktifkan RLS di semua tabel **[Wajib]** — 21 policy di migration `202608140003_rls_policies.sql`
+- [x] Tulis policy SELECT/INSERT/UPDATE/DELETE sesuai tabel kebijakan RLS di Tahap 3 **[Wajib]**
+- [x] Cabut hak UPDATE langsung kolom `status`/`diklaim_oleh`/`dibatalkan_oleh` dari role `authenticated` **[Wajib]** — migration `202608140004_revoke_status_update.sql`
+- [x] Buat RPC function `claim_listing` **[Wajib]** — migration `202608140005_rpc_functions.sql`
+- [x] Buat RPC function `complete_listing` **[Wajib]**
+- [x] Buat RPC function `cancel_claim` **[Wajib]**
+- [x] Buat index lokasi (`lokasi_lat`, `lokasi_lng`) dan status pada `listings` **[Wajib]** — migration `202608140006_indexes.sql`
+- [x] Isi seed data `kategori_kecocokan` (baseline dari `looplink-ai-ml-integration.md`) **[Wajib]** — 7 baris di `seed.sql`
+- [x] Buat seed data akun dummy (5-6 akun, lokasi & kategori bervariasi) untuk demo **[Wajib]** — 6 akun (admin + 5), password `looplink123`
+- [x] Test manual: jalankan `claim_listing` dari 2 akun berbeda, pastikan listing sendiri tidak bisa diklaim **[Wajib]** — 6 test fungsional RPC lolos (klaim, tolak klaim sendiri, complete, cancel, tolak pihak ketiga), dijalankan di transaksi rollback supaya seed aman
 
 ---
 

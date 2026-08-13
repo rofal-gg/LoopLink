@@ -9,7 +9,7 @@
 
 **Fase aktif: siap mulai Fase 2 — AI/ML Integration** (delegasikan ke `looplink-ai-ml-integration`)
 
-> ⚠️ **Catatan koordinasi:** Fase 1 (Database & Supabase) **belum dikerjakan** — database Supabase masih kosong. Fase 2 (fungsi `hitungSkorKecocokan`, klasifikasi, dsb.) bisa dimulai secara paralel, tapi seed data `kategori_kecocokan` (Fase 1) akan dibutuhkan saat uji skor kecocokan. Urutan kerja yang disarankan: kerjakan Fase 2 fungsi AI/ML murni (klasifikasi, ekstraksi, Haversine) sambil dikejar Fase 1 database — atau tuntaskan Fase 1 dulu sesuai urutan TASKS.md.
+> ✅ **Fase 1 (Database & Supabase) SELESAI** — 7 migration + seed sudah ter-apply ke Supabase remote, RLS aktif, 3 RPC terverifikasi. Tidak ada lagi blocker database untuk Fase 2.
 
 ---
 
@@ -25,9 +25,22 @@
 - ✅ **Repo GitHub aktif** — remote `rofal-gg/LoopLink.git`, branch `main` sinkron dengan `origin/main`.
 - ✅ **5 file agent opencode terpasang** — `looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend` di `.opencode/agents/`.
 
-### Fase 1 — Database & Supabase
+### Fase 1 — Database & Supabase ✅
 
-- ⏳ **Belum ada yang selesai** — lihat bagian "Yang Sedang Dikerjakan / Setengah Jalan".
+- ✅ **7 migration ter-apply ke Supabase remote** (via MCP `apply_migration`):
+  - `202608140001_tabel_inti.sql` — `profiles`, `listings`, `listing_photos`, `kategori_kecocokan`
+  - `202608140002_tabel_pendukung.sql` — `riwayat_klaim`, `laporan`, `riwayat_pencarian`, `riwayat_pencarian_hasil`
+  - `202608140003_rls_policies.sql` — RLS aktif di 8 tabel + 21 policy
+  - `202608140004_revoke_status_update.sql` — revoke UPDATE langsung kolom `status`/`diklaim_oleh`/`dibatalkan_oleh`/`diklaim_pada` dari `authenticated`
+  - `202608140005_rpc_functions.sql` — `claim_listing`, `complete_listing`, `cancel_claim` (SECURITY DEFINER, `set search_path = public`)
+  - `202608140006_indexes.sql` — `idx_listings_lokasi` (lat+lng), `idx_listings_status`
+  - `202608140007_perbaikan_keamanan.sql` — fix `search_path` `set_updated_at` + revoke EXECUTE dari `anon` untuk 3 RPC (grant `authenticated` tetap)
+- ✅ **Seed data ter-apply** (`supabase/seed.sql`) — 7 `kategori_kecocokan`, 6 akun demo (semua password `looplink123`: `admin@`, `budi@`, `sari@`, `agus@`, `dewi@`, `rina@` @looplink.demo), 10 listings (6 tersedia, 2 dipesan, 1 selesai, 1 dibatalkan — termasuk 1 contoh `perlu_koreksi_manual`), 10 foto, 2 riwayat klaim.
+- ✅ **Bug seed yang diperbaiki:** (1) Supabase modern tidak punya unique constraint di `auth.users.email` → guard `if not exists` bukan `ON CONFLICT (email)`; (2) `auth.users.id` tanpa default → `gen_random_uuid()` eksplisit; (3) auto-grant EXECUTE ke `anon` untuk fungsi baru di `public` → revoke eksplisit dari `anon`.
+- ✅ **Verifikasi keamanan & fungsional:**
+  - `has_function_privilege`: anon=false, authenticated=true untuk 3 RPC ✓
+  - 6 test fungsional RPC **PASS** (dijalankan di transaksi rollback): klaim orang lain ✓, klaim sendiri ditolak ✓, complete non-pemilik ditolak ✓, complete pemilik + riwayat tercatat ✓, cancel pihak ketiga ditolak ✓, cancel pengklaim + riwayat tercatat ✓
+  - Security advisor: WARN `set_updated_at` & anon-3-RPC hilang; sisa WARN `authenticated` pada 3 RPC adalah desain (aturan bisnis #5) dan `rls_auto_enable` adalah fungsi bawaan Supabase.
 
 ---
 
@@ -42,9 +55,9 @@
 | Daftar API key Gemini | Belum | User isi manual |
 | Siapkan `.env.local` dengan semua key | Belum — template sudah siap di `.env.local.example` | User isi manual (`cp .env.local.example .env.local`) |
 
-### Fase 1 — Database & Supabase (belum dimulai)
+### Fase 1 — Database & Supabase (selesai ✅)
 
-Database Supabase saat ini **kosong**: 0 tabel, 0 migration. Seluruh task Fase 1 di `LoopLink_TASKS.md` masih unchecked — termasuk tabel inti (`profiles`, `listings`, `listing_photos`, `kategori_kecocokan`), tabel GTM, RLS, RPC `claim_listing` / `complete_listing` / `cancel_claim`, index, dan seed data. Begitu Fase 2 selesai dimulai, delegasikan Fase 1 ke `looplink-database-supabase`.
+Database Supabase sudah lengkap: 8 tabel + RLS, 3 RPC, index, seed data ter-apply dan terverifikasi. Detail di bagian "Yang Sudah Selesai" di atas.
 
 ---
 
@@ -61,8 +74,8 @@ Database Supabase saat ini **kosong**: 0 tabel, 0 migration. Seluruh task Fase 1
 
 ### Prasyarat sebelum Fase 2 berjalan penuh
 
-- [ ] User mengisi `.env.local` (`HF_API_TOKEN`, `GEMINI_API_KEY`, key Supabase)
-- [ ] (Paralel / segera) Fase 1 Database — minimal tabel inti + seed `kategori_kecocokan`
+- [x] Fase 1 Database — tabel inti, RLS, RPC, index, seed `kategori_kecocokan` + akun demo sudah selesai & ter-apply
+- [ ] User mengisi `.env.local` (`HF_API_TOKEN`, `GEMINI_API_KEY`, key Supabase) — **satu-satunya blocker tersisa**
 
 ### Setelah Fase 2
 
