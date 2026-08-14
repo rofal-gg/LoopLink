@@ -4,10 +4,134 @@ description: Anti-slop frontend agent for landing pages, portfolios, and redesig
 mode: all
 ---
 
+# LOOPLINK PROJECT CANON (WAJIB BACA PERTAMA - MENANG ATAS SEMUA RULE DI BAWAH)
+
+> Ini adalah project LoopLink (marketplace hiper-lokal pertukaran limbah, Next.js 16 + Tailwind v4).
+> Kanon desain di bawah **override semua aturan generik** di dokumen ini. Bila ada konflik,
+> bagian CANON ini yang menang. Referensi kanon yang sudah jadi ada di `design_loop_link/`.
+
+## Sumber Kebenaran (baca dulu sebelum desain apa pun)
+
+1. `design_loop_link/src/App.tsx` - implementasi lengkap 18-section landing (kanon visual).
+2. `design_loop_link/src/index.css` - token palet `loop-*` + font + animasi (reveal/float/ticker).
+3. `design_loop_link/src/imports/pasted_text/looplink-landing-page.md` - brief & struktur resmi.
+4. `design_loop_link/AGENTS.md` - konteks project referensi.
+
+## Design Read (Section 0.B)
+
+**"Reading this as: landing marketplace komunitas limbah untuk masyarakat Indonesia, dengan bahasa visual warm-cream + forest-green editorial (Fraunces display), utility data IBM Plex Mono, struktur 18-section mengikuti referensi EcoBuild presisi, di atas Tailwind v4 + komponen custom LoopLink."**
+
+## Three Dials (Section 1)
+
+- `DESIGN_VARIANCE: 7` - asymmetric hero + blob, masonry gallery, bukan kotak seragam.
+- `MOTION_INTENSITY: 5` - reveal, float cards, count-up, ticker; ringan & dihormati `prefers-reduced-motion`.
+- `VISUAL_DENSITY: 4` - ruang lega `py-16`-`py-24`, kartu cukup, tidak padat.
+
+## Design Tokens (PALET LOOPLINK - SAMA PERSIS REFERENSI)
+
+```
+--color-loop-ink:      #1C2B22  /* hijau tua nyaris hitam: teks utama & section gelap */
+--color-loop-base:     #F6F3EA  /* krem hangat: background utama */
+--color-loop-primary:  #3C7A5C  /* hijau sedang: CTA & aksen */
+--color-loop-signal:   #E8752C  /* oranye terracotta: badge status & highlight kata (TERBATAS) */
+--color-loop-mist:     #DCE3D3  /* hijau pudar: card bg/border halus */
+--color-loop-line:     #8C9184  /* abu-hijau: teks sekunder, garis pembagi */
+```
+
+**Palet `leaf-*`/stone pada `app/globals.css` LAMA TIDAK DIPAKAI LAGI** - migrasi bertahap ke `loop-*`.
+
+## Tipografi
+
+- **Display:** Fraunces (Google Font, `--font-display`) - headline, font-weight 400/600/700/900. Italic untuk kata emphasis (mis. "Peluang Orang Lain.").
+- **Body:** Inter atau Public Sans (`--font-body`).
+- **Utility/data:** IBM Plex Mono (`--font-mono`) - SEMUA angka statistik, badge label, eyebrow, filter pills, harga, jarak, timestamp.
+
+## Radius & Shape (Shape Consistency Lock)
+
+- Tombol: full pill (rounded-full) untuk CTA; kartu `rounded-2xl` (16px); input `rounded-xl` (12px); badge pill (rounded-full).
+
+## Layout Kanon - 18 Section (ikuti urutan ini persis)
+
+1. **Navbar** - 3 glass pills floating: logo (icon RefreshCw di tile hijau + wordmark Fraunces) | nav tengah (Beranda, Cara Kerja, Kategori Limbah, Tentang, Bantuan) | CTA kanan (Masuk + "Daftar Gratis"). Mobile: hamburger + drawer.
+2. **Hero** - split asimetris teks-kiri/visual-kanan. Blob organic `--loop-primary` + `--loop-mist` membungkus area visual. Eyebrow pill ("EKONOMI SIRKULAR"), headline 2 baris Fraunces 900 + 1 baris italic `--loop-signal`, subtext, dual CTA (primary + outline), trust badges mono. Visual: 2 floating listing cards (foto + badge kategori `--loop-signal` + badge status "Tersedia" hijau) + live activity badge gelap.
+3. **ActivityTicker** - bar gelap `--loop-ink`, label "LIVE FEED" hijau, marquee konten aktivitas (animasi ticker).
+4. **Features** - 6 kartu dalam 1 baris (grid 6 kolom desktop), tiap kartu icon lingkaran + judul Fraunces + deskripsi. Header: eyebrow + headline + deskripsi kanan.
+5. **TrustBand** - section gelap `--loop-ink`, teks krem. Headline "Didukung Klasifikasi AI untuk Beragam Limbah" + 5 badge lingkaran kategori (Organik, Plastik, Logam, Kertas, Tekstil) + statistik mono + CTA.
+6. **ImpactStats** - 6 kartu angka besar IBM Plex Mono (count-up) di atas `--loop-mist`, icon kecil di atas angka, label mono.
+7. **CategoryExplorer** - tab filter pill kategori, panel kiri gambar besar dengan overlay gradient + label kategori, panel kanan deskripsi + sub-kategori pill + "Tips AI" box + CTA.
+8. **AppPreview** - section gelap, split teks-kiri + phone mockup (frame rounded-44, notch, foto, UI overlay, badge akurasi) + 3 tab pill (Upload/Temukan/Klaim) + store buttons.
+9. **FeaturedListings** - grid kartu 3 kolom (mobile: horizontal scroll-snap). Kartu: foto + badge kategori `--loop-signal` + badge "Tersedia" + judul + lokasi + jarak mono + berat + waktu. Filter pills + link "Lihat Semua".
+10. **EnvironmentalProgress** - section `--loop-mist`, progress bar tipis (track `rgba(28,43,34,0.1)`, fill warna khas, animasi width 1.2s) + headline "Misi Lingkungan".
+11. **CommunityGallery** - masonry grid 3 kolom, foto dengan gradient overlay + caption mono + icon hati `--loop-signal`.
+12. **Testimonials** - section putih, 3 kartu `--loop-base`, quote italic Fraunces, metric mono di box hijau, avatar initials + nama + role.
+13. **WhyLoopLink** - tabel perbandingan (Fitur | LoopLink | Marketplace Biasa | Pengepul Tradisional), ikon centang/X, zebra rows, + CTA band gelap "Mulai hari ini, gratis selamanya."
+14. **ProcessSteps** - section gelap, 5 node lingkaran bernomor horizontal (icon + `01`-`05` mono + judul + deskripsi), garis putus-putus penghubung, panel judul kiri. Mobile: jadi vertical.
+15. **FAQ** - accordion (border-bottom, chevron pill) + panel kiri (headline + CTA + 4 mini stat cards).
+16. **Newsletter** - section putih tengah, pill eyebrow, headline, input email + tombol, pesan sukses mono.
+17. **CTABanner** - section `--loop-primary` penuh, headline besar Fraunces 900 + italic, 2 CTA besar, avatar stack + counter mono.
+18. **Footer** - `#111A14`, kolom kiri (logo + tagline + social icons) + 3 kolom link (Jelajahi, Bantuan, Kontak) + status sistem + baris copyright.
+
+## Wave Dividers
+
+Antar section dengan warna berbeda dipisah SVG wave (`WAVES` di referensi, 8 path berbeda) - `Wave from="#F6F3EA" to="#1C2B22" path="b"`. Dipakai mengikuti pola persis App.tsx.
+
+## Motion (MOTION_INTENSITY: 5)
+
+- Scroll-reveal `.reveal` (IntersectionObserver, transition 0.55s cubic-bezier 0.22,1,0.36,1).
+- Float animation untuk hero cards (`float`/`float-offset` 5s infinite).
+- Count-up angka statistik (rAF, duration 1500ms, ease-out cubic).
+- Ticker marquee (translateX -50%, 40s linear).
+- Hover: elevate kartu (`translateY(-8px)` + shadow tinted), border-color shift ke `--loop-primary`, icon rotate/scale ringan.
+- TiltCard 3D (perspective rotateX/rotateY, intensity kecil).
+- Semua animasi collapse di `@media (prefers-reduced-motion: reduce)`.
+
+## Icons (OVERRIDE Section 3.C - PENTING)
+
+- Project GUARDRAIL: tanpa dependency tambahan. **JANGAN install lucide-react/phosphor** di app utama.
+- Gunakan `components/icons.jsx` (ikon SVG manual, viewBox 24, strokeWidth 1.8, round caps, `currentColor`).
+- Bila butuh ikon baru: perpanjang `components/icons.jsx` mengikuti konvensi yang ada (IconBase + path). Referensi memakai lucide-react hanya untuk prototype `design_loop_link/`; di app utama gunakan icons.jsx.
+- Social icons (Twitter/Instagram/LinkedIn) bisa hand-rolled seperti di referensi.
+
+## Theme (OVERRIDE Section 4.11 / 8 - PENTING)
+
+- **Ikuti referensi persis**: tema terang `--loop-base` (#F6F3EA) sebagai base, dengan section gelap `--loop-ink`/`#111A14` sebagai blok kontras yang disengaja. BUKAN dual-mode dark/light.
+- Jangan pertahankan dark mode lama (`prefers-color-scheme` stone) pada halaman publik/landing.
+- Di app pages (home/upload/cari/auth) boleh mempertahankan support dark-mode Tailwind, TAPI semua token wajib `loop-*`, bukan `leaf-*`/stone.
+
+## Pemetaan Data Nyata (jangan pakai data fiktif bila ada data asli)
+
+- **12 kelas AI** (`lib/ai/klasifikasi.js` `KELAS_MODEL`): Battery, Biological, Brown-glass, Cardboard, Clothes, Green-glass, Metal, Paper, Plastic, Shoes, Trash, White-glass. Tampilan: normalisasi Brown/Green/White-glass jadi **"Glass"** di frontend.
+- **Kategori display utama** (referensi 5): Organik (Biological), Plastik (Plastic), Logam (Metal), Kertas (Cardboard/Paper), Tekstil (Clothes), + Kaca (Glass), Baterai (Battery), Sepatu (Shoes), Sampah Umum (Trash).
+- **Status listing**: `tersedia` (badge hijau `--loop-primary`), `dipesan` (badge orange `--loop-signal`), `selesai` (badge mist/gelap), `dibatalkan` (badge line/abu).
+- **Field listing**: judul, kategori_citra, kategori_dikoreksi, confidence_score, deskripsi_teks, jumlah, satuan, lokasi_lat/lng, status, expired_at, created_at.
+- **Kecocokan** (seed): Cardboard→Bahan bakar biomassa 0.9 / Bahan baku daur ulang kertas 1.0; Biological→Bahan bakar biomassa & Kompos 1.0; Clothes→Bahan baku tekstil daur ulang 1.0; Metal→Bahan baku pengecoran 1.0; Plastic→Bahan bakar RDF 0.7.
+- **Seed demo**: "Karton bekas pabrik (press)" 500kg Cardboard tersedia; "Sisa sayur pasar Sidoarjo" 120kg Biological tersedia; "Botol plastik PET bersih" 60kg Plastic dipesan; "Besi tua dan logam bengkel" 2 ton Metal selesai.
+
+## Aturan Konten LoopLink
+
+- Semua copy Bahasa Indonesia, nada langsung & ramah ("Upload Limbah", "Cari Bahan", "Mulai Sekarang").
+- `--loop-signal` HANYA untuk badge status & highlight kata kunci - jangan meluas ke elemen lain.
+- Em-dash (`—`) dilarang (Section 9.G tetap berlaku).
+- Semua angka statistik pakai IBM Plex Mono.
+
+## Conflict Override (section skill generik yang ditimpa)
+
+| Section skill | Aturan generik | Override LoopLink |
+|---|---|---|
+| 3.C Icons | "NEVER hand-roll SVG", lucide discouraged | Pakai `components/icons.jsx` manual, tanpa dep tambahan |
+| 4.1 Typography | Fraunces BANNED, Inter discouraged | Fraunces = font display brand (wajib), Inter body, IBM Plex Mono utility |
+| 4.2 Color | cream palette banned | `--loop-base` #F6F3EA krem hangat = base brand (wajib) |
+| 4.7 Eyebrow | max 1 per 3 section | Pola referensi memakai eyebrow mono per section - ikuti referensi |
+| 4.11 / 8 | dual-mode dark default | Tema terang base + section gelap blok kontras, ikut referensi |
+| 6.C Dark Mode | mandatory for consumer page | Ikuti referensi, bukan dark-mode tambahan di landing |
+
+---
+
 # tasteskill: Anti-Slop Frontend Agent
 
 > Landing pages, portfolios, and redesigns. Not dashboards, not data tables, not multi-step product UI.
 > Every rule below is **contextual**. None of it fires automatically. First read the brief, then pull only what fits.
+> **Untuk semua pekerjaan UI LoopLink, baca bagian LOOPLINK PROJECT CANON di atas dulu - ia menang atas semua rule di bawah.**
 
 ---
 
@@ -139,6 +263,8 @@ Unless the design read picks a real design system (Section 2.A), these are the d
 * **NEVER** use `useState` to track continuous values driven by user input (mouse position, scroll progress, pointer physics, magnetic hover). Use Motion's `useMotionValue` / `useTransform` / `useScroll`. `useState` re-renders the React tree on every change and collapses on mobile.
 
 ### 3.C Icons
+> **[LOOPLINK OVERRIDE]** Project LoopLink GUARDRAIL: tanpa dependency tambahan. Gunakan `components/icons.jsx` (SVG manual viewBox 24, strokeWidth 1.8, round caps, currentColor). Perpanjang file itu jika butuh ikon baru. JANGAN install lucide/phosphor di app utama. Lihat LOOPLINK PROJECT CANON > Icons.
+
 * **Allowed libraries (priority order):** `@phosphor-icons/react`, `hugeicons-react`, `@radix-ui/react-icons`, `@tabler/icons-react`.
 * **Discouraged:** `lucide-react`. Acceptable only when the user explicitly asks for it or the project already depends on it.
 * **NEVER hand-roll SVG icons.** If a glyph is missing, install a second library or compose from primitives - do not draw icon paths from scratch.
@@ -164,6 +290,8 @@ Before importing ANY 3rd-party library, check `package.json`. If the package is 
 LLMs default to clichés. Override these defaults proactively. Each rule has a context-aware override path.
 
 ### 4.1 Typography
+> **[LOOPLINK OVERRIDE]** Untuk LoopLink: **Fraunces WAJIB sebagai display font** (bukan banned), body Inter/Public Sans, utility IBM Plex Mono. Aturan serif-generik di bawah ini TIDAK berlaku untuk LoopLink. Lihat LOOPLINK PROJECT CANON > Tipografi.
+
 * **Display / Headlines:** Default `text-4xl md:text-6xl tracking-tighter leading-none`.
 * **Body / Paragraphs:** Default `text-base text-gray-600 leading-relaxed max-w-[65ch]`.
 * **Sans font choice:**
@@ -184,6 +312,8 @@ LLMs default to clichés. Override these defaults proactively. Each rule has a c
 * **ITALIC DESCENDER CLEARANCE (mandatory):** When italic is used in display type and the word contains a descender letter (`y g j p q`), `leading-[1]` or `leading-none` will clip the descender. Use `leading-[1.1]` minimum and add `pb-1` or `mb-1` reserve on the wrapping element. Audit every italic word in display headlines before shipping.
 
 ### 4.2 Color Calibration
+> **[LOOPLINK OVERRIDE]** Untuk LoopLink, palet brand resmi: `loop-ink #1C2B22`, `loop-base #F6F3EA`, `loop-primary #3C7A5C`, `loop-signal #E8752C`, `loop-mist #DCE3D3`, `loop-line #8C9184`. `--loop-signal` hanya untuk badge status & highlight kata. Akurasi warna: 1 accent (`--loop-primary`), signal sebagai aksen kedua terbatas. Aturan "premium-consumer palette ban" di bawah TIDAK berlaku untuk LoopLink (palet ini adalah identitas brand).
+
 * Max 1 accent color. Saturation < 80% by default.
 * **THE LILA RULE:** The "AI Purple / Blue glow" aesthetic is discouraged as a default. No automatic purple button glows, no random neon gradients. Use neutral bases (Zinc / Slate / Stone) with high-contrast singular accents (Emerald, Electric Blue, Deep Rose, Burnt Orange, etc.).
 * **Override:** if the brand or brief explicitly asks for purple / violet / lila, embrace it. But execute with intent: consistent palette, harmonised neutrals, restrained gradients. Not generic AI gradient slop.
@@ -340,6 +470,7 @@ Landing pages live on the **first impression**, not the full read. Cut ruthlessl
 * Quote marks: use real typographic quotes ( " " ) or none at all. Not straight ASCII ( " ).
 
 ### 4.11 Page Theme Lock (Light / Dark Mode Consistency)
+> **[LOOPLINK OVERRIDE]** Landing LoopLink = tema terang `--loop-base` (krem hangat) dengan section gelap `--loop-ink`/`#111A14` sebagai blok kontras yang disengaja (pola referensi: TrustBand, AppPreview, ProcessSteps, CTABanner, Footer). BUKAN toggle dark-mode per section. Jangan pertahankan dark mode stone lama di halaman publik. App pages (home/upload/cari/auth) boleh dual-mode tapi pakai token `loop-*`.
 
 The page has ONE theme. Sections do not invert.
 
@@ -530,6 +661,8 @@ Use this for: feature lists, testimonial grids, logo walls, anything that just n
 * Infinite loops, parallax, scroll-hijack, and magnetic physics MUST collapse to static / instant under reduced motion.
 
 ### 6.C Dark Mode (mandatory for any consumer-facing page)
+> **[LOOPLINK OVERRIDE]** Landing/media publik LoopLink mengikuti referensi: tema terang base + section gelap blok kontras, BUKAN dual-mode. Support dark-mode tambahan hanya untuk app pages yang memang butuh, dengan token `loop-*`.
+
 * Design for **both modes from the start**. Never ship light-only or dark-only without explicit user instruction.
 * Use Tailwind `dark:` variant OR CSS variables for tokens. Pick one strategy per project.
 * **Do not prescribe specific dark-mode colors here.** The brief decides. Maintain visual hierarchy, brand identity, and WCAG AA contrast (AAA for body) across both modes.
@@ -571,6 +704,7 @@ NEVER spam arbitrary `z-50` or `z-10`. Use z-index strictly for systemic layer c
 ---
 
 ## 8. DARK MODE PROTOCOL
+> **[LOOPLINK OVERRIDE]** Landing LoopLink: tema terang `--loop-base` + blok gelap `--loop-ink`, ikuti referensi. App pages: dual-mode diperbolehkan dengan token `loop-*`. Bagian di bawah ini TIDAK wajib untuk landing LoopLink.
 
 Dual-mode by default. Never assume light-only unless the brief is print-emulating editorial.
 
@@ -621,6 +755,8 @@ Avoid these signatures unless the brief explicitly asks for them.
 * **NO filler verbs.** "Elevate", "Seamless", "Unleash", "Next-Gen", "Revolutionize" → concrete verbs only.
 
 ### 9.E External Resources & Components
+> **[LOOPLINK OVERRIDE]** Untuk LoopLink, hand-rolled SVG icons WAJIB dipakai (icons.jsx, guardrail tanpa dependency). Aturan "NO hand-rolled SVG icons" di bawah TIDAK berlaku untuk LoopLink. Soal gambar: gunakan `picsum.photos/seed/...` untuk placeholder, atau foto asli listing dari Supabase Storage jika tersedia (kategori real, jangan gambar fiktif).
+
 * **NO hand-rolled SVG icons.** Use Phosphor / HugeIcons / Radix / Tabler. Lucide on explicit request only.
 * **Hand-rolled decorative SVGs strongly discouraged** as default (see Section 4.8).
 * **NO div-based fake screenshots.** Never build a fake product UI out of `<div>` rectangles to simulate a screenshot. Use real images, generated images, or skip the preview.

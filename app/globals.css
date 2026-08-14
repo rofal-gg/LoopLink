@@ -1,26 +1,257 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * LoopLink — Design Tokens (Fase 4.1 / 4.2)
+ * -----------------------------------------
+ * Sumber kebenaran: design_loop_link (Figma Make export).
+ * Gaya FIXED light cream — tidak ada dark mode otomatis /
+ * prefers-color-scheme. Kontras gelap hanya lewat section sengaja
+ * (section gelap #1C2B22 / footer #111A14).
+ */
+
+@theme {
+  /* Warna */
+  --color-loop-ink: #1c2b22;          /* teks utama & section gelap */
+  --color-loop-base: #f6f3ea;         /* latar utama cream */
+  --color-loop-primary: #3c7a5c;      /* emerald utama */
+  --color-loop-primary-hover: #2d5e46;/* hover emerald */
+  --color-loop-signal: #e8752c;       /* orange aksen / CTA */
+  --color-loop-mist: #dce3d3;         /* kartu / background sekunder */
+  --color-loop-line: #8c9184;         /* teks sekunder / border */
+  --color-loop-mint: #6bba91;         /* teks aksen di atas gelap */
+  --color-loop-dark: #111a14;         /* footer ekstrem gelap */
+  --color-loop-badges: #c8d4bf;       /* hover mist */
+  --color-loop-rowline: #f0ede2;      /* garis halus kartu */
+  --color-loop-ink2: #2a3d30;         /* node proses gelap */
+  --color-loop-purple: #9b6b9b;       /* aksen kategori tekstil */
+
+  /* Font */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular,
+    monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--color-loop-base);
+  color: var(--color-loop-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hero viewport — fallback dvh untuk mobile */
+.hero-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Focus ring khas LoopLink — konsisten untuk tombol & tautan interaktif */
+.fr:focus-visible {
+  outline: 2px solid var(--color-loop-primary);
+  outline-offset: 2px;
+}
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Float animation untuk kartu hero ── */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes float-offset {
+  0%,
+  100% {
+    transform: translateX(32px) translateY(0px);
+  }
+  50% {
+    transform: translateX(32px) translateY(-10px);
+  }
+}
+.float-card-0 {
+  animation: float 5s ease-in-out infinite;
+}
+.float-card-1 {
+  animation: float-offset 5s ease-in-out 1.5s infinite;
+}
+
+/* ── Horizontal scroll snap untuk listing mobile ── */
+.listings-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 14px;
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.listings-scroll::-webkit-scrollbar {
+  display: none;
+}
+.listings-scroll .listing-card {
+  min-width: 280px;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ── Nav link underline hover ── */
+.nav-link {
+  position: relative;
+  color: var(--color-loop-line);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.18s;
+  padding-bottom: 2px;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--color-loop-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover {
+  color: var(--color-loop-primary);
+}
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Live ticker ── */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Process step node hover ── */
+.step-node {
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.step-node:hover {
+  background-color: #2e5e45 !important;
+  transform: scale(1.08);
+}
+
+/* ── CTA button press ── */
+.btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+/* ── Ping live dot ── */
+@keyframes ll-ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* ── Range slider (radius pencarian) ── */
+.range-loop {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-loop-primary) var(--fill, 30%),
+    var(--color-loop-mist) var(--fill, 30%)
+  );
+  outline: none;
+  cursor: pointer;
+}
+.range-loop::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  background: var(--color-loop-primary);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(28, 43, 34, 0.35);
+  cursor: pointer;
+}
+.range-loop::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  background: var(--color-loop-primary);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(28, 43, 34, 0.35);
+  cursor: pointer;
+}
+.range-loop:focus-visible {
+  outline: 2px solid var(--color-loop-primary);
+  outline-offset: 2px;
+}
+.range-loop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-loop-line);
+  border-radius: 3px;
+}
+
+/* ── prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .float-card-0,
+  .float-card-1 {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

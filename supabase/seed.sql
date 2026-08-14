@@ -14,6 +14,10 @@
 --   * Akun admin / moderator demo: admin@looplink.demo  (is_admin = true)
 --   * Akun dibuat langsung via auth.users + auth.identities sehingga login
 --     email/password berfungsi tanpa registrasi manual.
+--     Syaratnya dua (lihat BAGIAN B.1):
+--       (1) auth.users.instance_id disetel zero-UUID agar GoTrue menemukan user;
+--       (2) kolom token text (confirmation_token, recovery_token, ...) diisi
+--           string kosong, bukan NULL, agar GoTrue tidak gagal scan saat login.
 --   * Seed IDEMPOTENT — aman dijalankan ulang (on conflict do nothing /
 --     guard `not exists`), tidak akan membuat duplikat akun/listing.
 --   * Butuh extension pgcrypto untuk crypt()/gen_salt() (bawaan Supabase,
@@ -82,17 +86,40 @@ begin
     --   * auth.users.id TIDAK punya default di Supabase modern — id harus
     --     di-generate eksplisit dengan gen_random_uuid() lalu dipakai juga
     --     untuk auth.identities dan profiles.
+    --   * instance_id WAJIB disetel ke zero-UUID ('00000000-0000-0000-0000-000000000000').
+    --     GoTrue memfilter user berdasarkan instance_id; user yang dibuat lewat
+    --     admin API selalu punya nilai ini. Tanpa ini akun TIDAK ditemukan saat
+    --     login → "Invalid login credentials".
+    --   * Kolom token berikut WAJIB diisi string kosong '', BUKAN NULL:
+    --     confirmation_token, recovery_token, email_change_token_new,
+    --     email_change_token_current, phone_change_token, reauthentication_token,
+    --     email_change, phone_change. GoTrue meng-scan kolom-kolom ini sebagai
+    --     string; NULL membuat query gagal ("Scan error: converting NULL to
+    --     string is unsupported"). JANGAN tambahkan kolom lain (mis. apple_auth_code
+    --     / new_email / new_phone) — tidak ada di schema auth.users versi ini.
     if not exists (select 1 from auth.users where email = v_email) then
       v_user_id := gen_random_uuid();
 
       insert into auth.users (
-        id, aud, role, email, encrypted_password, email_confirmed_at,
+        id,
+        instance_id,
+        aud, role, email, encrypted_password, email_confirmed_at,
+        confirmation_token, recovery_token,
+        email_change_token_new, email_change_token_current,
+        phone_change_token, reauthentication_token,
+        email_change, phone_change,
         raw_app_meta_data, raw_user_meta_data, created_at, updated_at
       )
       values (
-        v_user_id, 'authenticated', 'authenticated', v_email,
+        v_user_id,
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', v_email,
         crypt('looplink123', gen_salt('bf')),
         now(),
+        '', '',  -- confirmation_token, recovery_token
+        '', '',  -- email_change_token_new, email_change_token_current
+        '', '',  -- phone_change_token, reauthentication_token
+        '', '',  -- email_change, phone_change
         jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')),
         jsonb_build_object('nama_lengkap', v_rec.nama),
         now(), now()

@@ -47,3 +47,6 @@ next-env.d.ts
 .env.local
 .env*.local
 !.env.local.example
+
+# test fixtures (foto sampel untuk uji klasifikasi — jangan commit file besar)
+/scripts/fixtures/

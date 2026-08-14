@@ -10,6 +10,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Folder referensi desain (ekspor Figma), bukan bagian dari aplikasi Next.
+    "design_loop_link/**",
   ]),
 ]);
 
