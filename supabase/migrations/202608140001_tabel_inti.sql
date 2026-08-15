@@ -12,8 +12,9 @@
 --
 -- Catatan penting:
 --   * profiles.id mereferensikan auth.users(id) — TIDAK ada tabel users custom.
---   * listings.kategori_citra memakai label ASLI model klasifikasi
---     (watersplash/waste-classification, 12 kelas) — jangan normalisasi.
+--   * listings.kategori_citra memakai label KELAS_MODEL (12 kelas) yang
+--     dihasilkan model google/vit-base-patch16-224 + pemetaan
+--     PEMETAAN_LABEL_IMAGENET di lib/ai/klasifikasi.js — jangan normalisasi.
 --   * listings.status / satuan / profiles.status_akun pakai CHECK constraint
 --     bernama eksplisit supaya bisa di-revoke/di-drop nanti.
 -- ============================================================================
@@ -58,9 +59,10 @@ create trigger trg_profiles_set_updated_at
 
 -- ----------------------------------------------------------------------------
 -- listings
--- kategori_citra: 12 kelas PERSIS dari model watersplash/waste-classification
--- (Battery, Biological, Brown-glass, Cardboard, Clothes, Green-glass, Metal,
---  Paper, Plastic, Shoes, Trash, White-glass).
+-- kategori_citra: 12 kelas PERSIS dari KELAS_MODEL, dihasilkan lewat model
+-- google/vit-base-patch16-224 + pemetaan PEMETAAN_LABEL_IMAGENET di
+-- lib/ai/klasifikasi.js (Battery, Biological, Brown-glass, Cardboard, Clothes,
+-- Green-glass, Metal, Paper, Plastic, Shoes, Trash, White-glass).
 -- Perubahan status/klaim WAJIB lewat RPC security definer (migration 05),
 -- bukan UPDATE langsung dari client.
 -- diklaim_pada: dicatat supaya riwayat_klaim punya waktu klaim yang akurat.

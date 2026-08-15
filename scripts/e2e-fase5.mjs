@@ -148,7 +148,7 @@ async function main() {
   catat(true, "S1c. Login kedua akun berhasil (cookie sesi siap)");
 
   // --- Upload foto → klasifikasi AI ---------------------------------------
-  const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures/corrugated-cardboard.jpg");
+  const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures/cardboard-milk-carton.jpg");
   const GAMBAR_BYTES = readFileSync(FIXTURE);
 
   const klas = await panggil("/api/listings/klasifikasi", {

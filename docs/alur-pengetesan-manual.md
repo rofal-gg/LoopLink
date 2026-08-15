@@ -45,7 +45,7 @@ npm run dev        # → buka http://localhost:3000
 ### 1.4 Foto uji untuk upload
 
 Foto contoh ada di `scripts/fixtures/`:
-- `plastic-bottles.jpg`, `corrugated-cardboard.jpg` (bisa dipakai kalau jaringan bisa resolve HF)
+- `plastic-bottles.jpg`, `cardboard-milk-carton.jpg`, `metal-milk-can.jpg`, `glass-beer-bottles.jpg`, `paper-copy-stack.jpg` (fixture demo resmi; bisa dipakai kalau jaringan bisa resolve HF)
 - Kalau tidak ada, foto apa pun dari HP/kamera (format jpeg/png/webp, < 5 MB) — ingat hasil klasifikasi AI bisa gagal → itu jalur yang benar (lihat Skenario B).
 
 > ⚠️ **Keterbatasan jaringan dev yang diketahui:** kalau jaringanmu tidak bisa resolve

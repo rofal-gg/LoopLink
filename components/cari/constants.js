@@ -2,12 +2,17 @@
 // Nilai kategori kebutuhan DIKIRIM PERSIS ke API (exact match dengan kolom
 // `kategori_kebutuhan` tabel `kategori_kecocokan`). Jangan mengubah ejaan.
 
-/** 6 pilihan kategori kebutuhan yang tersedia di tabel kategori_kecocokan. */
+/** 7 pilihan kategori kebutuhan yang tersedia di tabel kategori_kecocokan. */
 export const KEBUTUHAN_OPTIONS = [
   {
     nilai: "Bahan baku daur ulang kertas",
     label: "Daur ulang kertas",
     desc: "Karton, kardus, kertas bekas",
+  },
+  {
+    nilai: "Bahan baku daur ulang kaca",
+    label: "Daur ulang kaca",
+    desc: "Botol & pecahan kaca untuk cullet",
   },
   {
     nilai: "Bahan bakar biomassa",

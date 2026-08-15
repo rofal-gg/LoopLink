@@ -10,7 +10,7 @@
 
 - [x] Inisialisasi project Next.js + Tailwind CSS `[Delegasi: manual/setup]` **[Wajib]** — selesai: Next.js 16.3.0 (App Router) + Tailwind v4, build & dev server terverifikasi
 - [x] Buat project Supabase baru, catat URL & anon key `[Delegasi: manual/setup]` **[Wajib]** — URL & key sudah tercatat di `.env.local`
-- [x] Daftar API key HuggingFace (Inference API token) `[Delegasi: manual/setup]` **[Wajib]** — `HF_API_TOKEN` sudah terisi di `.env.local`; live call terverifikasi hingga DNS `api-inference.huggingface.co` (keterbatasan jaringan, lihat Fase 2)
+- [x] Daftar API key HuggingFace (Inference API token) `[Delegasi: manual/setup]` **[Wajib]** — `HF_API_TOKEN` sudah terisi di `.env.local`; klasifikasi memakai model `google/vit-base-patch16-224` via endpoint Router (keterbatasan & pemetaan, lihat Fase 2)
 - [x] Daftar API key Gemini via Google AI Studio `[Delegasi: manual/setup]` **[Wajib]** — `GEMINI_API_KEY` sudah terisi di `.env.local`; live call terverifikasi sukses
 - [x] Siapkan file `.env.local` dengan semua key (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HF_API_TOKEN`, `GEMINI_API_KEY`) `[Delegasi: manual/setup]` **[Wajib]** — file terisi lengkap
 - [x] Setup repo GitHub (wajib untuk pengumpulan karya sesuai ketentuan lomba) `[Delegasi: manual/setup]` **[Wajib]** — repo `rofal-gg/LoopLink` sudah aktif, branch `main` sinkron dengan `origin/main`
@@ -45,12 +45,13 @@
 
 > ✅ Status: **selesai** (dengan 1 keterbatasan tercatat) — 3 modul `lib/ai/` + 3 test script + loader env sudah dibuat dan terverifikasi (matching 20 PASS, ekstraksi 11 PASS termasuk panggilan Gemini live, klasifikasi 15 PASS + 2 WARN fallback). Detail di `PROGRESS.md`.
 
-- [x] Implementasi fungsi `klasifikasiCitra()` — panggil HuggingFace `watersplash/waste-classification` **[Wajib]** — `lib/ai/klasifikasi.js`
+- [x] Implementasi fungsi `klasifikasiCitra()` — panggil model `google/vit-base-patch16-224` (ImageNet-1k) via `https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224`; label ImageNet-1k dipetakan ke 12 kategori LoopLink lewat `PEMETAAN_LABEL_IMAGENET` **[Wajib]** — `lib/ai/klasifikasi.js`
+- ⚠️ **Keterbatasan model (tercatat):** `Battery` tidak pernah terdeteksi otomatis (ImageNet-1k tidak punya kelas baterai); `Trash` tidak punya mapping label ImageNet; label unmapped atau confidence < 0.6 → `perlu_koreksi_manual: true` (sebagian foto butuh koreksi manual).
 - [x] Terapkan threshold confidence 0.6 (`perlu_koreksi_manual`) **[Wajib]** — konstanta `CONFIDENCE_THRESHOLD = 0.6`, diuji 0.4→true & 0.6→false
 - [x] Implementasi fungsi `ekstraksiDeskripsi()` — panggil Gemini 1.5 Flash **[Wajib]** — `lib/ai/ekstraksi.js` (pakai alias `gemini-flash-latest`; `gemini-1.5-flash` sudah 404 di API v1beta, terverifikasi live)
 - [x] Implementasi fungsi `hitungJarakKm()` (Haversine) **[Wajib]** — `lib/ai/matching.js`, terverifikasi Monas→Surabaya 665.255 km
 - [x] Implementasi fungsi `hitungSkorKecocokan()` (rule-based, bobot 0.5/0.3/0.2) **[Wajib]** — `lib/ai/matching.js`, 20 kasus PASS
-- [ ] Test klasifikasi dengan 5-10 foto contoh, catat akurasi kasar **[Wajib]** — ⚠️ **blocker**: DNS `api-inference.huggingface.co` tidak resolve dari jaringan dev; 2 foto contoh sudah disiapkan di `scripts/fixtures/`, jalur sukses belum terverifikasi live (fallback sudah tervalidasi). Coba ulang dari jaringan lain.
+- [ ] Test klasifikasi dengan 5-10 foto contoh, catat akurasi kasar **[Wajib]** — ⚠️ **blocker**: endpoint lama sudah tidak dipakai; jalur sukses `google/vit-base-patch16-224` via Router + pemetaan `PEMETAAN_LABEL_IMAGENET` belum terverifikasi live dari jaringan dev (fallback sudah tervalidasi). 2 foto contoh sudah disiapkan di `scripts/fixtures/`. Coba ulang dari jaringan lain.
 - [x] Test skenario confidence rendah (foto ambigu) memicu flag koreksi manual dengan benar **[Wajib]** — diuji via mock (0.4 → koreksi, 0.6 persis → tidak)
 - [x] Test fallback saat HuggingFace/Gemini sengaja dimatikan (simulasi API down) **[Wajib]** — timeout, non-OK, non-JSON, key kosong: semua mengembalikan bentuk fallback tanpa melempar
 
@@ -141,7 +142,7 @@
 
 ## Fase 5 — Integrasi & Testing End-to-End
 
-> ✅ Status: **selesai** — 31 PASS E2E API + 14 PASS mobile (Chrome headless). Seluruh skenario wajib lolos: registrasi→lokasi→upload→AI→koreksi→tayang, cari→detail→klaim→kontak, selesai tercatat `riwayat_klaim`, batal dua sisi `dibatalkan_oleh` benar, tanpa tombol klaim untuk listing sendiri, radius filter. Catatan: AI klasifikasi live masih menunggu jaringan yang resolve `api-inference.huggingface.co` (fallback & mock sudah teruji). Detail di `PROGRESS.md` & `scripts/e2e-fase5.mjs` / `scripts/e2e-mobile.mjs`.
+> ✅ Status: **selesai** — 31 PASS E2E API + 14 PASS mobile (Chrome headless). Seluruh skenario wajib lolos: registrasi→lokasi→upload→AI→koreksi→tayang, cari→detail→klaim→kontak, selesai tercatat `riwayat_klaim`, batal dua sisi `dibatalkan_oleh` benar, tanpa tombol klaim untuk listing sendiri, radius filter. Catatan: AI klasifikasi memakai `google/vit-base-patch16-224` (ImageNet-1k) via endpoint Router + pemetaan `PEMETAAN_LABEL_IMAGENET`; jalur live belum terverifikasi dari jaringan dev (fallback & mock sudah teruji). Detail di `PROGRESS.md` & `scripts/e2e-fase5.mjs` / `scripts/e2e-mobile.mjs`.
 
 - [x] Test alur penuh: registrasi → setup lokasi → upload foto → klasifikasi AI → koreksi → listing tayang **[Wajib]** — E2E S1 (8 cek PASS; AI fallback/koreksi manual teruji, live HF tergantung jaringan)
 - [x] Test alur penuh: cari bahan → lihat hasil terurut skor → buka detail → klaim → lihat kontak **[Wajib]** — E2E S2 (7 cek PASS, skor 0.84, kontak pemilik tampil)

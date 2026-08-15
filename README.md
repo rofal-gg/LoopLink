@@ -1,6 +1,6 @@
 # LoopLink — Bursa Pertukaran Limbah Hiper-Lokal
 
-![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Postgres%2FAuth%2FRLS-3ecf8e) ![HuggingFace](https://img.shields.io/badge/HuggingFace-waste--classification-ffd21e) ![Gemini](https://img.shields.io/badge/Gemini-1.5_Flash-4285f4)
+![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Postgres%2FAuth%2FRLS-3ecf8e) ![HuggingFace](https://img.shields.io/badge/HuggingFace-vit--base--patch16--224-ffd21e) ![Gemini](https://img.shields.io/badge/Gemini-1.5_Flash-4285f4)
 
 > Proyek pengembangan aplikasi untuk **Trunodjoyo Creative Competition 2026 — Vibe Code**.
 > Platform digital yang menghubungkan **penghasil limbah** dan **pencari bahan baku** dalam satu ekosistem — siapa pun bisa mengubah sampahnya menjadi sumber daya bagi orang lain.
@@ -81,14 +81,14 @@
 ## Alur Inti Aplikasi
 
 ```
-┌──────────┐    ┌───────────────────┐    ┌────────────────┐    ┌──────────────┐
-│  Upload  │───▶│ AI Klasifikasi    │───▶│ Review &       │───▶│ Listing      │
-│  Foto    │    │ (waste-classifica-│    │ Koreksi Manual │    │ Tayang       │
-│  Limbah  │    │  tion)            │    │ + Detail       │    │ (tersedia)   │
-└──────────┘    └───────────────────┘    └────────────────┘    └──────┬───────┘
-                                                                     │
-┌──────────────┐    ┌───────────────────┐    ┌────────────────┐      │
-│ Transaksi    │◀───│ Klaim             │◀───│ Skor Kecocokan │◀─────┘
+┌──────────┐    ┌─────────────────────────┐    ┌────────────────┐    ┌──────────────┐
+│  Upload  │───▶│ AI Klasifikasi Citra    │───▶│ Review &       │───▶│ Listing      │
+│  Foto    │    │ (google/vit-base → 12   │    │ Koreksi Manual │    │ Tayang       │
+│  Limbah  │    │  kelas via PEMETAAN)    │    │ + Detail       │    │ (tersedia)   │
+└──────────┘    └─────────────────────────┘    └────────────────┘    └──────┬───────┘
+                                                                            │
+┌──────────────┐    ┌───────────────────┐    ┌────────────────┐             │
+│ Transaksi    │◀───│ Klaim             │◀───│ Skor Kecocokan │◀────────────┘
 │ Selesai/Batal│    │ (kontak pemilik)  │    │ (rule-based)   │   User lain
 └──────────────┘    └───────────────────┘    └────────────────┘   cari bahan
 ```
@@ -96,7 +96,7 @@
 **Langkah detail:**
 
 1. **Upload foto limbah** — user memotret/memilih foto limbah.
-2. **AI klasifikasi citra** — model `watersplash/waste-classification` (HuggingFace) menebak 1 dari 12 kategori limbah.
+2. **AI klasifikasi citra** — model `google/vit-base-patch16-224` (ImageNet-1k, via `https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224`) menebak label foto, lalu label dipetakan ke 1 dari 12 kategori limbah lewat tabel `PEMETAAN_LABEL_IMAGENET` di `lib/ai/klasifikasi.js`.
 3. **Koreksi manual** — kalau confidence < 60% (`perlu_koreksi_manual: true`) atau klasifikasi gagal, user memilih kategori sendiri; Gemini 1.5 Flash membantu mengekstrak kondisi & catatan dari deskripsi bebas.
 4. **Listing tayang** — status `tersedia`, terlihat oleh user lain.
 5. **Pencarian** — user lain mencari bahan dengan kategori kebutuhan + radius; sistem menghitung **skor kecocokan** untuk tiap listing dalam radius.
@@ -115,7 +115,7 @@
 | **Database** | Supabase (PostgreSQL) | RLS aktif, migration di `supabase/migrations/` |
 | **Auth** | Supabase Auth (email/password) | Pola `@supabase/ssr` |
 | **Storage** | Supabase Storage | Bucket publik `listings` (foto listing) |
-| **Computer Vision** | HuggingFace Inference API — `watersplash/waste-classification` | 12 kelas, threshold confidence 0.6 |
+| **Computer Vision** | HuggingFace Inference Router — `google/vit-base-patch16-224` (ImageNet-1k) + pemetaan `PEMETAAN_LABEL_IMAGENET` | 12 kategori LoopLink, threshold confidence 0.6 |
 | **Generative AI** | Gemini 1.5 Flash (alias `gemini-flash-latest`) | Ekstraksi kondisi & catatan deskripsi |
 | **Matching** | Rule-based (Haversine + tabel skor) | **Tanpa** sentence embedding |
 
@@ -131,7 +131,7 @@ Browser (React)
     │
     └── API Routes Next.js (app/api)
             │
-            ├── lib/ai/klasifikasi.js ────────────▶ HuggingFace (waste-classification)
+            ├── lib/ai/klasifikasi.js ────────────▶ HF Inference Router (vit-base-patch16-224 → 12 kategori)
             ├── lib/ai/ekstraksi.js ──────────────▶ Gemini 1.5 Flash
             ├── lib/ai/matching.js ───────────────▶ Haversine + skor rule-based
             ├── lib/supabase/server.js ───────────▶ Client sesi user (RLS aktif)
@@ -185,7 +185,7 @@ project/
 │   └── ui/                     # Button, Modal, Inputs
 ├── lib/
 │   ├── ai/
-│   │   ├── klasifikasi.js      # HuggingFace waste-classification
+│   │   ├── klasifikasi.js      # HF Router vit-base-patch16-224 + PEMETAAN_LABEL_IMAGENET
 │   │   ├── ekstraksi.js        # Gemini 1.5 Flash
 │   │   └── matching.js         # Haversine + skor rule-based
 │   ├── api/validasi-listing.js # Validasi terpusat
@@ -300,13 +300,14 @@ Semua modul AI ada di `lib/ai/`, dengan kontrak respons yang stabil untuk endpoi
 
 ### 1. Klasifikasi Citra — `lib/ai/klasifikasi.js`
 
-- Memanggil HuggingFace Inference API: `watersplash/waste-classification`.
-- **12 kelas model:** `Battery`, `Biological`, `Brown-glass`, `Cardboard`, `Clothes`, `Green-glass`, `Metal`, `Paper`, `Plastic`, `Shoes`, `Trash`, `White-glass`.
-- **Threshold confidence 0.6** (`CONFIDENCE_THRESHOLD`) → `perlu_koreksi_manual: true` di bawah itu.
+- Memanggil **HuggingFace Inference Router**: `https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224` — pipeline image-classification model `google/vit-base-patch16-224` (ImageNet-1k, bukan model limbah khusus).
+- **Pemetaan label ImageNet-1k** → 12 kategori LoopLink lewat tabel `PEMETAAN_LABEL_IMAGENET` di `lib/ai/klasifikasi.js`. Label top-1 model di-lookup ke tabel (case & spasi tepi diabaikan); `kategori` = nilai pemetaan (salah satu dari `KELAS_MODEL`) atau `null` bila label tidak terpetakan.
+- **12 kategori LoopLink (`KELAS_MODEL`):** `Battery`, `Biological`, `Brown-glass`, `Cardboard`, `Clothes`, `Green-glass`, `Metal`, `Paper`, `Plastic`, `Shoes`, `Trash`, `White-glass`.
+- **Threshold confidence 0.6** (`CONFIDENCE_THRESHOLD`) → `perlu_koreksi_manual: true` di bawah itu; begitu juga saat label tidak terpetakan (`kategori === null`).
 - **Timeout 10 detik** (`AbortSignal.timeout`) — tidak pernah melempar error mentah.
 - Kontrak: sukses → `{ kategori, confidence, perlu_koreksi_manual, peringkat, gagal: false }`; gagal → `{ kategori: null, confidence: 0, perlu_koreksi_manual: true, gagal: true, alasan_gagal }`.
 
-> ⚠️ **Keterbatasan tercatat:** DNS `api-inference.huggingface.co` tidak resolve dari jaringan dev — jalur sukses live belum terverifikasi (jalur fallback sudah tervalidasi penuh via mock). 2 foto contoh di `scripts/fixtures/`.
+> ⚠️ **Keterbatasan model (tercatat):** ImageNet-1k tidak punya kelas baterai → `Battery` **tidak pernah** terdeteksi otomatis (selalu masuk jalur koreksi manual). `Trash` **tidak punya mapping** label ImageNet. Karena itu sebagian foto masuk `perlu_koreksi_manual: true` (label unmapped atau confidence < 0.6) dan perlu koreksi manual oleh user. 2 foto contoh di `scripts/fixtures/`.
 
 ### 2. Ekstraksi Teks — `lib/ai/ekstraksi.js`
 

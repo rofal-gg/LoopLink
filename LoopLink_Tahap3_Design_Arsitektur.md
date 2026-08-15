@@ -18,6 +18,13 @@ flowchart TD
     B --> E[(Supabase<br/>Postgres + Auth + RLS)]
 ```
 
+### Model Klasifikasi Citra — Keputusan & Batasan yang Diketahui
+
+Klasifikasi citra memakai model **`google/vit-base-patch16-224`** (ImageNet-1k), bukan model limbah khusus. Label ImageNet-1k dipetakan ke 12 kategori LoopLink (`KELAS_MODEL`) lewat `PEMETAAN_LABEL_IMAGENET` di `lib/ai/klasifikasi.js`. Dua konsekuensi berikut merupakan **keputusan sadar**, bukan bug:
+
+- ImageNet-1k **tidak memiliki kelas "battery"**, dan tidak ada label ImageNet-1k yang dipetakan ke `Trash`.
+- Akibatnya `Battery` dan `Trash` **tidak akan pernah muncul sebagai hasil klasifikasi otomatis** AI. Keduanya tetap tersedia sebagai pilihan manual saat user mengoreksi hasil (`perlu_koreksi_manual`), sehingga listing kedua kategori tersebut tetap bisa dibuat.
+
 ---
 
 ## B. Mekanisme Matching Tanpa Embedding
@@ -42,6 +49,11 @@ Mendefinisikan kategori limbah apa cocok untuk kebutuhan apa, diisi manual berda
 | Clothes | Bahan baku tekstil daur ulang | 1.0 |
 | Metal | Bahan baku pengecoran | 1.0 |
 | Plastic | Bahan bakar RDF (Refuse-Derived Fuel) | 0.7 |
+
+### Batasan Tabel `kategori_kecocokan` (Status Saat Ini)
+
+- **`Shoes` sengaja tidak memiliki baris aturan** — keputusan sadar (ditunda), bukan kelupaan. Konsekuensinya skor matching `Shoes` terhadap semua kebutuhan = 0, sehingga listing sepatu tidak akan pernah muncul di hasil pencarian. Penundaan ini terkait prioritas skenario juri/demo yang berfokus pada kertas, kaca, organik, logam, dan plastik.
+- Kategori kebutuhan **`Bahan baku daur ulang kaca`** akan diperkenalkan untuk tiga varian kaca (Brown / Green / White-glass) sebagai tujuan reuse cullet. Kaca sengaja dipertahankan sebagai tiga kategori terpisah demi presisi pemilahan warna.
 
 ### Formula Skor Akhir
 

@@ -31,7 +31,7 @@
 - ✅ **`.env.local.example`** — berisi 5 variabel kosong siap isi manual: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HF_API_TOKEN`, `GEMINI_API_KEY`.
 - ✅ **Supabase client pola `@supabase/ssr`** — `lib/supabase/client.js` (browser, singleton) & `lib/supabase/server.js` (server component/route handler, `cookies()` async).
 - ✅ **Proxy refresh sesi (konvensi Next.js 16)** — `proxy.js` di root + `lib/supabase/proxy.js` (`updateSession` → `supabase.auth.getClaims()`, sinkronisasi cookie request/response, cache headers anti-CDN). Termasuk guard env kosong agar dev server tidak 500 sebelum key diisi.
-- ✅ **`.env.local` terisi lengkap** — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HF_API_TOKEN`, `GEMINI_API_KEY` sudah ada. Live Gemini terverifikasi; HF menunggu jaringan yang bisa resolve `api-inference.huggingface.co`.
+- ✅ **`.env.local` terisi lengkap** — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HF_API_TOKEN`, `GEMINI_API_KEY` sudah ada. Live Gemini terverifikasi; klasifikasi HF memakai model `google/vit-base-patch16-224` via endpoint Router + pemetaan `PEMETAAN_LABEL_IMAGENET` (detail Fase 2).
 - ✅ **Repo GitHub aktif** — remote `rofal-gg/LoopLink.git`, branch `main` sinkron dengan `origin/main`.
 - ✅ **5 file agent opencode terpasang** — `looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend` di `.opencode/agents/`.
 
@@ -54,7 +54,7 @@
 
 ### Fase 2 — AI/ML Integration ✅
 
-- ✅ **`lib/ai/klasifikasi.js`** — `klasifikasiCitra(imageBuffer)` panggil HuggingFace `watersplash/waste-classification` (12 kelas, label asli tidak dinormalisasi), timeout 10 detik, threshold `CONFIDENCE_THRESHOLD = 0.6` → `perlu_koreksi_manual`. Sukses: `{ kategori, confidence, perlu_koreksi_manual, peringkat, gagal: false }`; gagal: `{ kategori: null, confidence: 0, perlu_koreksi_manual: true, gagal: true, alasan_gagal }` — tidak pernah melempar.
+- ✅ **`lib/ai/klasifikasi.js`** — `klasifikasiCitra(imageBuffer)` panggil model `google/vit-base-patch16-224` (ImageNet-1k) via `https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224`; label ImageNet-1k hasil model dipetakan ke 12 kategori LoopLink lewat tabel `PEMETAAN_LABEL_IMAGENET` (label asli top-1 tersimpan di `peringkat`), timeout 10 detik, threshold `CONFIDENCE_THRESHOLD = 0.6` → `perlu_koreksi_manual`. Sukses: `{ kategori, confidence, perlu_koreksi_manual, peringkat, gagal: false }`; gagal: `{ kategori: null, confidence: 0, perlu_koreksi_manual: true, gagal: true, alasan_gagal }` — tidak pernah melempar.
 - ✅ **`lib/ai/ekstraksi.js`** — `ekstraksiDeskripsi({ deskripsiUser, kategoriCitra, usiaBulan })` panggil Gemini (alias `gemini-flash-latest`, lihat catatan), output JSON `{ kondisi, catatan_tambahan }`, sanitasi input user, timeout 10 detik, fallback `{ kondisi: "tidak diketahui", catatan_tambahan: "", gagal: true }`.
 - ✅ **`lib/ai/matching.js`** — `hitungJarakKm()` Haversine (R=6371, clamp presisi floating point) + `hitungSkorKecocokan()` persis bobot 0.5/0.3/0.2, hasil clamp [0,1], pasangan kategori persis dari `seed.sql` BAGIAN A. Konstanta bobot diekspor (`BOBOT_KATEGORI/JARAK/VOLUME`). Kedua fungsi pure (tanpa I/O → tanpa timeout, dokumentasi di header).
 - ✅ **Test script manual** (`scripts/`, jalan dengan `node <file>`, tanpa package baru):
@@ -63,7 +63,7 @@
   - `scripts/test-klasifikasi.mjs` — **15 PASS, 0 FAIL, 2 WARN**: 15 jalur deterministik (sukses mock, threshold 0.4→true/0.6→false, timeout, non-OK, JSON rusak, 5 input invalid, key kosong) + 2 WARN keterbatasan (lihat bawah).
 - ✅ **`scripts/load-env.mjs`** — loader `.env.local` minimal untuk `node` langsung (tidak mencetak key).
 - ✅ **`.gitignore`** — `scripts/fixtures/` (foto sampel uji) ditambahkan.
-- ⚠️ **Keterbatasan tersisa (bukan blocker Fase 3):** DNS `api-inference.huggingface.co` tidak resolve dari jaringan dev (`huggingface.co` OK). Live klasifikasi belum terverifikasi; jalur fallback (termasuk timeout 10 detik) sudah tervalidasi penuh via mock. 2 foto contoh (`plastic-bottles.jpg`, `corrugated-cardboard.jpg`) sudah ada di `scripts/fixtures/` untuk dicoba dari jaringan lain.
+- ⚠️ **Keterbatasan model (tercatat):** `google/vit-base-patch16-224` bukan model limbah khusus — ImageNet-1k tidak punya kelas **battery** (→ `Battery` tidak pernah terdeteksi otomatis) dan `Trash` tidak punya mapping label. Label ImageNet yang unmapped atau skor < 0.6 → `perlu_koreksi_manual: true` (sebagian foto butuh koreksi manual). Live klasifikasi dari jaringan dev belum terverifikasi (endpoint lama `api-inference...` sudah tidak dipakai; fallback termasuk timeout 10 detik sudah tervalidasi penuh via mock). 2 foto contoh (`plastic-bottles.jpg`, `corrugated-cardboard.jpg`) sudah ada di `scripts/fixtures/` untuk dicoba dari jaringan lain.
 - 📌 **Catatan deviasi terdokumentasi:** spec menyebut `gemini-1.5-flash`, tapi di API v1beta model itu sudah 404 (terverifikasi live). Diganti alias resmi `gemini-flash-latest` (konstanta `MODEL_GEMINI` di `ekstraksi.js`) — tidak melanggar aturan non-negosiasi agent.
 
 ### Fase 3 — Backend API ✅
@@ -153,7 +153,7 @@
 
 ### Fase 5 — Integrasi & Testing End-to-End ✅
 
-- ✅ **Skenario 1 (Registrasi→lokasi→upload→AI→koreksi→tayang)** — akun baru (via admin API GoTrue, setara registrasi+konfirmasi) → profile+koordinat tersimpan → foto di-upload ke Storage bucket `listings` (RLS folder-sendiri lolos saat client pakai `setSession`) → klasifikasi endpoint 200; **live HF masih fallback (DNS `api-inference.huggingface.co` tidak resolve)** → state `gagal`/koreksi manual → listing 201 status `tersedia` + `kategori_dikoreksi=true` terverifikasi di DB.
+- ✅ **Skenario 1 (Registrasi→lokasi→upload→AI→koreksi→tayang)** — akun baru (via admin API GoTrue, setara registrasi+konfirmasi) → profile+koordinat tersimpan → foto di-upload ke Storage bucket `listings` (RLS folder-sendiri lolos saat client pakai `setSession`) → klasifikasi endpoint 200; **live HF masih fallback (endpoint lama `api-inference...` sudah tidak dipakai; endpoint Router + model `google/vit-base-patch16-224` belum terverifikasi dari jaringan dev)** → state `gagal`/koreksi manual → listing 201 status `tersedia` + `kategori_dikoreksi=true` terverifikasi di DB.
 - ✅ **Skenario 2 (Cari→terurut skor→detail→klaim→kontak)** — listing akun A muncul di hasil akun B (skor 0.84, jarak 16.1 km, terurut DESC), detail 200 + pemilik/nomor/alamat, klaim 200, setelah klaim status `dipesan` + `diklaim_oleh` + kontak pemilik tetap tampil.
 - ✅ **Skenario 3 (Selesai oleh pemilik)** — non-pemilik ditolak 400; pemilik 200; status `selesai`; `riwayat_klaim` berisi `status_akhir='selesai'` + `diselesaikan_pada`; listing selesai tidak muncul lagi di pencarian.
 - ✅ **Skenario 4 (Batal dua sisi)** — batal oleh pengklaim → `listings.dibatalkan_oleh=id_pengklaim`; batal oleh pemilik → `dibatalkan_oleh=id_pemilik`; keduanya menulis `riwayat_klaim.status_akhir='dibatalkan'` + listing kembali `tersedia`.
@@ -166,7 +166,7 @@
 
 | Task | Status | Blocker |
 |---|---|---|
-| Test klasifikasi 5-10 foto contoh + catat akurasi kasar (TASKS.md Fase 2) | Belum — 2 foto siap di `scripts/fixtures/`, jalur sukses belum terverifikasi | DNS `api-inference.huggingface.co` tidak resolve dari jaringan dev; coba dari jaringan lain / periksa DNS |
+| Test klasifikasi 5-10 foto contoh + catat akurasi kasar (TASKS.md Fase 2) | Belum — 2 foto siap di `scripts/fixtures/`, jalur sukses belum terverifikasi | Endpoint lama sudah tidak dipakai; verifikasi live `google/vit-base-patch16-224` via Router + pemetaan `PEMETAAN_LABEL_IMAGENET` dari jaringan lain |
 
 ---
 

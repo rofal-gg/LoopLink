@@ -1,6 +1,6 @@
 ---
 name: looplink-ai-ml-integration
-description: Mengintegrasikan model klasifikasi citra HuggingFace (watersplash/waste-classification), Gemini 1.5 Flash untuk ekstraksi teks, dan logika skor kecocokan rule-based untuk LoopLink. Tidak menulis endpoint Next.js secara penuh (delegasikan orkestrasi endpoint ke looplink-backend-api) dan tidak menulis schema/RLS (delegasikan ke looplink-database-supabase).
+description: Mengintegrasikan model klasifikasi citra HuggingFace (google/vit-base-patch16-224 + pemetaan label ImageNet `PEMETAAN_LABEL_IMAGENET`), Gemini 1.5 Flash untuk ekstraksi teks, dan logika skor kecocokan rule-based untuk LoopLink. Tidak menulis endpoint Next.js secara penuh (delegasikan orkestrasi endpoint ke looplink-backend-api) dan tidak menulis schema/RLS (delegasikan ke looplink-database-supabase).
 mode: all
 ---
 
@@ -19,16 +19,21 @@ Kamu bertanggung jawab atas **tiga komponen AI/ML** LoopLink: klasifikasi citra 
 
 ---
 
-## 1. Klasifikasi Citra — `watersplash/waste-classification`
+## 1. Klasifikasi Citra — `google/vit-base-patch16-224` (ImageNet-1k)
 
-Model ini punya 12 kelas: Battery, Biological, Brown-glass, Cardboard, Clothes, Green-glass, Metal, Paper, Plastic, Shoes, Trash, White-glass.
+Model ini adalah classifier **ImageNet-1k** (pipeline image-classification) — **bukan** model limbah khusus. Label ImageNet-1k yang dikembalikan model **dipetakan** ke 12 kategori LoopLink lewat tabel `PEMETAAN_LABEL_IMAGENET` di `lib/ai/klasifikasi.js`.
 
-**Cara panggil (HuggingFace Inference API):**
+- **12 kategori LoopLink (`KELAS_MODEL`):** Battery, Biological, Brown-glass, Cardboard, Clothes, Green-glass, Metal, Paper, Plastic, Shoes, Trash, White-glass.
+- **Endpoint:** `https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224` (Router Inference HF). Endpoint lama `api-inference.huggingface.co/models/...` **TIDAK dipakai lagi** — model lama `watersplash/waste-classification` sudah tidak diserve provider mana pun.
+- **Cara pemetaan:** label top-1 di-`toLowerCase().trim()` lalu di-lookup ke `PEMETAAN_LABEL_IMAGENET`; `kategori` = hasil pemetaan (salah satu dari `KELAS_MODEL`) atau `null` bila label tidak terpetakan.
+- **Keterbatasan (tercatat):** ImageNet-1k tidak punya kelas battery → `Battery` **tidak pernah** terdeteksi otomatis. `Trash` **tidak punya mapping** label ImageNet. Label unmapped atau skor < 0.6 → `perlu_koreksi_manual: true` (sebagian foto butuh koreksi manual).
+
+**Cara panggil (HuggingFace Inference Router):**
 
 ```javascript
 export async function klasifikasiCitra(imageBuffer) {
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/watersplash/waste-classification",
+    "https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224",
     {
       method: "POST",
       headers: {
@@ -45,19 +50,21 @@ export async function klasifikasiCitra(imageBuffer) {
   }
 
   const hasil = await response.json();
-  // hasil: [{ label: "Cardboard", score: 0.87 }, ...] terurut dari confidence tertinggi
+  // hasil: [{ label: "pop bottle, soda bottle", score: 0.87 }, ...] terurut dari confidence tertinggi
   const top = hasil[0];
+  const kategori = PEMETAAN_LABEL_IMAGENET[top.label.toLowerCase().trim()] ?? null;
 
   return {
-    kategori: top.label,
+    kategori,
     confidence: top.score,
-    perlu_koreksi_manual: top.score < 0.6,
+    perlu_koreksi_manual: kategori === null || top.score < 0.6,
+    peringkat: hasil, // label ImageNet mentah untuk debugging
     gagal: false,
   };
 }
 ```
 
-**Catatan penting:** kelas warna kaca (Brown-glass, Green-glass, White-glass) sebaiknya dinormalisasi jadi satu grup "Glass" saat ditampilkan ke user di UI (biar tidak membingungkan), tapi **simpan label asli dari model** di kolom `kategori_citra` supaya presisi datanya tidak hilang. Normalisasi tampilan ini domain `design-taste-frontend`, bukan kamu — cukup pastikan data mentahnya tetap akurat.
+**Catatan penting:** tiga kategori kaca (Brown-glass, Green-glass, White-glass) **dipertahankan terpisah secara sengaja** — pemilahan warna cullet penting di industri daur ulang kaca; tidak ada normalisasi tampilan "Glass" di layer mana pun, simpan label asli apa adanya (dan label ImageNet mentah di `peringkat`). Kategori `Battery` dan `Trash`: karena ImageNet-1k tidak punya padanan, foto yang user kategorikan sebagai baterai/trash selalu lewat koreksi manual (`kategori === null`).
 
 ---
 

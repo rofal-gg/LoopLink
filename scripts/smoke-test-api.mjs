@@ -243,7 +243,7 @@ async function main() {
 
   // --- B4. Klasifikasi citra + ekstraksi teks -------------------------------
   console.log("\n== B.4 Klasifikasi & ekstraksi ==");
-  const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures/corrugated-cardboard.jpg");
+  const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures/cardboard-milk-carton.jpg");
   const GAMBAR_BYTES = readFileSync(FIXTURE);
 
   const klas = await panggil("/api/listings/klasifikasi", {
