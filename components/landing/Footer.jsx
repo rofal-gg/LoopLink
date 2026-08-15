@@ -10,7 +10,7 @@ function SocialBtn({ label }) {
   const [hovered, setHovered] = useState(false);
   return (
     <a
-      href="#beranda"
+      href="#"
       aria-label={label}
       style={{
         width: 36,
@@ -49,7 +49,7 @@ export default function Footer() {
       { label: "Laporkan Masalah", href: "#bantuan" },
     ],
     Kontak: [
-      { label: "hello@looplink.id", href: "/login" },
+      { label: "hello@looplink.id", href: "mailto:hello@looplink.id" },
       { label: "Tentang Kami", href: "#tentang" },
       { label: "Masuk", href: "/login" },
       { label: "Daftar", href: "/register" },
@@ -176,7 +176,7 @@ export default function Footer() {
             {["Kebijakan Privasi", "Syarat & Ketentuan", "Cookie"].map((l) => (
               <a
                 key={l}
-                href="#beranda"
+                href="#"
                 style={{
                   color: "#8C9184",
                   fontSize: "0.78rem",

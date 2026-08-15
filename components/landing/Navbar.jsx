@@ -275,13 +275,17 @@ export default function Navbar({ loggedIn = false }) {
           background: "rgba(22,36,28,0.92)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
-          borderBottom: "1px solid rgba(107,186,145,0.15)",
           overflow: "hidden",
           maxHeight: open ? 500 : 0,
           transition: "max-height 0.35s cubic-bezier(0.22,1,0.36,1)",
         }}
       >
-        <div style={{ padding: "16px 24px 28px" }}>
+        <div
+          style={{
+            padding: "16px 24px 28px",
+            borderBottom: "1px solid rgba(107,186,145,0.15)",
+          }}
+        >
           <ul
             style={{
               listStyle: "none",
@@ -296,6 +300,7 @@ export default function Navbar({ loggedIn = false }) {
               <li key={l.label}>
                 <Link
                   href={l.href}
+                  onClick={() => setOpen(false)}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -327,6 +332,7 @@ export default function Navbar({ loggedIn = false }) {
             {loggedIn ? (
               <Link
                 href="/home"
+                onClick={() => setOpen(false)}
                 style={{
                   flex: 1,
                   textAlign: "center",
@@ -348,6 +354,7 @@ export default function Navbar({ loggedIn = false }) {
               <>
                 <Link
                   href="/login"
+                  onClick={() => setOpen(false)}
                   style={{
                     flex: 1,
                     textAlign: "center",
@@ -366,6 +373,7 @@ export default function Navbar({ loggedIn = false }) {
                 </Link>
                 <Link
                   href="/register"
+                  onClick={() => setOpen(false)}
                   style={{
                     flex: 1,
                     textAlign: "center",

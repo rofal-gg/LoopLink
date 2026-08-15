@@ -14,7 +14,10 @@ import { STATUS_META } from "./constants";
  * children bebas memuat tautan lain (mis. tombol Edit) tanpa <a> bersarang,
  * yang memecah a11y.
  */
-export default function KartuListing({ listing, foto = [], children }) {
+export default function KartuListing({ listing, foto = [], children, backHref = null }) {
+  const keDetail = backHref
+    ? `/listing/${listing.id}?from=${encodeURIComponent(backHref)}`
+    : `/listing/${listing.id}`;
   const fotoTerurut = [...(foto ?? [])].sort(
     (a, b) => (a.urutan ?? 0) - (b.urutan ?? 0)
   );
@@ -33,7 +36,7 @@ export default function KartuListing({ listing, foto = [], children }) {
       <div className="flex flex-col sm:flex-row">
         {/* Foto utama -> detail listing */}
         <Link
-          href={`/listing/${listing.id}`}
+          href={keDetail}
           aria-label={`Lihat detail ${listing.judul}`}
           className="fr relative block aspect-[4/3] shrink-0 overflow-hidden bg-loop-mist sm:aspect-auto sm:w-44"
         >
@@ -75,7 +78,7 @@ export default function KartuListing({ listing, foto = [], children }) {
           </div>
 
           <Link
-            href={`/listing/${listing.id}`}
+            href={keDetail}
             className="fr mt-2.5 font-display text-base font-semibold leading-snug tracking-tight text-loop-ink transition hover:text-loop-primary-hover"
           >
             {listing.judul}
@@ -91,7 +94,7 @@ export default function KartuListing({ listing, foto = [], children }) {
           <div className="mt-auto pt-3">
             {children}
             <Link
-              href={`/listing/${listing.id}`}
+              href={keDetail}
               className="fr mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-loop-primary transition hover:text-loop-primary-hover"
             >
               Lihat detail

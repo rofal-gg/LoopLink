@@ -65,7 +65,11 @@ export default function KlaimSaya({ items = [] }) {
               {item.listingHilang ? (
                 <KartuBatalHilang item={item} />
               ) : (
-                <KartuListing listing={item} foto={item.foto}>
+                <KartuListing
+                  listing={item}
+                  foto={item.foto}
+                  backHref="/klaim-saya"
+                >
                   <TrackingKlaim item={item} />
                 </KartuListing>
               )}

@@ -54,7 +54,7 @@ export default function CommunityGallery() {
               Bergabung dengan 21.700+ orang yang sudah mengubah limbah jadi nilai.
             </p>
             <a
-              href="#beranda"
+              href="/upload"
               style={{
                 color: "#3C7A5C",
                 fontWeight: 600,

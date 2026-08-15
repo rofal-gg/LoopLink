@@ -30,6 +30,16 @@ export default async function DetailListingPage({ params, searchParams }) {
       ? Number(sp.jarak)
       : null;
 
+  // Asal lalu lintas: whitelist path internal. Tidak valid / kosong -> /cari.
+  const BACK_WHITELIST = ["/cari", "/home", "/listing-saya", "/klaim-saya"];
+  const backHref = BACK_WHITELIST.includes(sp?.from) ? sp.from : "/cari";
+  const BACK_LABEL = {
+    "/listing-saya": "Kembali ke Listing Saya",
+    "/klaim-saya": "Kembali ke Klaim Saya",
+    "/home": "Kembali ke Dashboard",
+  };
+  const backLabel = BACK_LABEL[backHref] ?? "Kembali ke Cari Bahan";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -86,7 +96,7 @@ export default async function DetailListingPage({ params, searchParams }) {
       <AppHeader
         nama={profile?.nama_lengkap ?? null}
         email={user.email}
-        currentPath="/cari"
+        currentPath={backHref}
       />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         {!listing ? (
@@ -103,11 +113,11 @@ export default async function DetailListingPage({ params, searchParams }) {
               </p>
               <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
                 <Link
-                  href="/cari"
+                  href={backHref}
                   className="fr inline-flex items-center gap-2 rounded-full bg-loop-primary px-5 py-2.5 text-sm font-semibold text-loop-base shadow-[0_3px_12px_rgba(60,122,92,0.4)] transition hover:bg-loop-primary-hover"
                 >
                   <IconArrowLeft className="h-4 w-4" />
-                  Kembali ke Cari Bahan
+                  {backLabel}
                 </Link>
               </div>
             </div>
@@ -125,11 +135,11 @@ export default async function DetailListingPage({ params, searchParams }) {
               </p>
               <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
                 <Link
-                  href="/cari"
+                  href={backHref}
                   className="fr inline-flex items-center gap-2 rounded-full bg-loop-primary px-5 py-2.5 text-sm font-semibold text-loop-base shadow-[0_3px_12px_rgba(60,122,92,0.4)] transition hover:bg-loop-primary-hover"
                 >
                   <IconArrowLeft className="h-4 w-4" />
-                  Kembali ke Cari Bahan
+                  {backLabel}
                 </Link>
               </div>
             </div>
@@ -142,6 +152,8 @@ export default async function DetailListingPage({ params, searchParams }) {
             namaPengklaim={namaPengklaim}
             userId={user.id}
             jarak={jarak}
+            backHref={backHref}
+            backLabel={backLabel}
           />
         )}
       </main>

@@ -63,6 +63,8 @@ export default function DetailListing({
   namaPengklaim = null,
   userId,
   jarak = null,
+  backHref = "/cari",
+  backLabel = "Kembali ke Cari Bahan",
 }) {
   const router = useRouter();
 
@@ -212,11 +214,11 @@ export default function DetailListing({
         className="flex items-center justify-between gap-3"
       >
         <Link
-          href="/cari"
+          href={backHref}
           className="fr inline-flex items-center gap-1.5 text-sm font-medium text-loop-primary transition hover:text-loop-primary-hover"
         >
           <IconArrowLeft className="h-4 w-4" />
-          Kembali ke Cari Bahan
+          {backLabel}
         </Link>
         {tampilLapor ? (
           <button

@@ -89,7 +89,11 @@ export default function ListingSaya({ listings = [] }) {
         <ul className="mt-6 space-y-4">
           {filtered.map((l) => (
             <li key={l.id}>
-              <KartuListing listing={l} foto={l.listing_photos ?? []}>
+              <KartuListing
+                listing={l}
+                foto={l.listing_photos ?? []}
+                backHref="/listing-saya"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   {l.status === "dipesan" ? (
                     <p className="text-xs text-loop-line">

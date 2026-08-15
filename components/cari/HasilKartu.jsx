@@ -15,7 +15,7 @@ export default function HasilKartu({ item }) {
 
   return (
     <Link
-      href={`/listing/${item.listing_id}?jarak=${item.jarak_km}`}
+      href={`/listing/${item.listing_id}?jarak=${item.jarak_km}&from=/cari`}
       className="fr group flex flex-col overflow-hidden rounded-2xl border border-loop-mist bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-loop-primary/50 hover:shadow-md"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-loop-mist">
