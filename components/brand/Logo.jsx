@@ -1,20 +1,21 @@
 import Link from "next/link";
-import { RefreshCw } from "lucide-react";
 
 /**
- * Logo LoopLink — mark tile emerald + ikon RefreshCw (lucide) +
- * wordmark Fraunces. Sesuai design reference (design_loop_link).
+ * Logo LoopLink — mark diambil dari aset statis /logo.svg (public) +
+ * wordmark Fraunces. Satu source dipakai juga sebagai favicon
+ * (metadata icons di app/layout.js).
  * Dipakai di header publik, header app, halaman auth, dan footer.
  */
-export function LogoMark({ size = 32, className = "" }) {
+export function LogoMark({ size = 40, className = "" }) {
   return (
-    <span
+    <img
+      src="/logo.svg"
+      alt=""
       aria-hidden="true"
-      className={`inline-flex shrink-0 items-center justify-center rounded-lg bg-loop-primary ${className}`}
-      style={{ width: size, height: size, borderRadius: 8 }}
-    >
-      <RefreshCw size={size * 0.52} color="#fff" strokeWidth={2.2} />
-    </span>
+      width={size}
+      height={size}
+      className={`shrink-0 ${className}`}
+    />
   );
 }
 

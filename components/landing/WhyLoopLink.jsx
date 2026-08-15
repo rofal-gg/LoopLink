@@ -60,7 +60,7 @@ export default function WhyLoopLink() {
                 </th>
                 <th style={{ padding: "16px 20px", textAlign: "center", borderBottom: "1px solid #DCE3D3" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-                    <Mark size={24} />
+                    <Mark size={32} />
                     <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "#1C2B22", fontSize: "0.95rem" }}>
                       LoopLink
                     </span>

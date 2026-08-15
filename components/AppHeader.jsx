@@ -71,7 +71,7 @@ export default function AppHeader({ nama = null, email = "", currentPath = "" })
           <Logo
             href="/home"
             textClassName="text-loop-base"
-            markClassName="h-7 w-7"
+            markClassName="h-10 w-10"
           />
         </div>
 

@@ -27,6 +27,7 @@ export const metadata = {
   },
   description:
     "Marketplace hiper-lokal pertukaran limbah. Buang limbahmu dengan mudah, atau cari bahan daur ulang murah di sekitarmu.",
+  icons: { icon: "/logo.svg", apple: "/logo.svg" },
 };
 
 export default function RootLayout({ children }) {

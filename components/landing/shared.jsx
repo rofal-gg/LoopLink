@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RefreshCw } from "lucide-react";
+
 
 /* ─── Hooks ─── */
 export function useInView(threshold = 0.12) {
@@ -154,23 +154,17 @@ export function Eyebrow({ children, light = false }) {
   );
 }
 
-/* Mark logo (tile emerald + RefreshCw) — dipakai navbar, tabel, footer */
-export function Mark({ size = 32 }) {
+/* Mark logo (src=/logo.svg 1:1) — dipakai navbar, tabel, footer */
+export function Mark({ size = 40 }) {
   return (
-    <span
-      style={{
-        backgroundColor: "#3C7A5C",
-        borderRadius: 8,
-        width: size,
-        height: size,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
-    >
-      <RefreshCw size={size * 0.52} color="#fff" strokeWidth={2.2} />
-    </span>
+    <img
+      src="/logo.svg"
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      style={{ flexShrink: 0, display: "block" }}
+    />
   );
 }
 

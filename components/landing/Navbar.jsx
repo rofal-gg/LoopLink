@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronRight, RefreshCw } from "lucide-react";
+import { Menu, X, ChevronRight } from "lucide-react";
 
 /* Navbar 3 pill glass gelap — persis design reference. */
 export default function Navbar({ loggedIn = false }) {
@@ -69,7 +69,7 @@ export default function Navbar({ loggedIn = false }) {
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             border: "1px solid rgba(107,186,145,0.2)",
             borderRadius: 14,
-            padding: "10px 16px",
+            padding: "8px 14px",
             boxShadow: "0 4px 20px rgba(28,43,34,0.18), inset 0 1px 0 rgba(255,255,255,0.07)",
             transition: "background 0.2s, box-shadow 0.2s",
           }}
@@ -84,21 +84,14 @@ export default function Navbar({ loggedIn = false }) {
               "0 4px 20px rgba(28,43,34,0.18), inset 0 1px 0 rgba(255,255,255,0.07)";
           }}
         >
-          <span
-            style={{
-              backgroundColor: "#3C7A5C",
-              borderRadius: 7,
-              width: 28,
-              height: 28,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 0 1px rgba(107,186,145,0.35), 0 3px 10px rgba(60,122,92,0.45)",
-              flexShrink: 0,
-            }}
-          >
-            <RefreshCw size={14} color="#fff" strokeWidth={2.4} />
-          </span>
+          <img
+            src="/logo.svg"
+            alt=""
+            aria-hidden="true"
+            width={40}
+            height={40}
+            style={{ display: "block", flexShrink: 0 }}
+          />
           <span
             style={{
               fontFamily: "var(--font-display)",
