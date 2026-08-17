@@ -1,7 +1,7 @@
 # LoopLink — PROGRESS.md
 
 > Dokumen progres live project LoopLink (Trunodjoyo Creative Competition 2026 — Vibe Code).
-> Di-update setiap kali ada fase selesai / dimulai. Sumber kebenaran teknis: `LoopLink_TASKS.md`, `LoopLink_PROMPT.md`, `LoopLink_Tahap3_Design_Arsitektur.md`.
+> Di-update setiap kali ada fase selesai / dimulai. Sumber kebenaran teknis: `docs/sdd/LoopLink_TASKS.md`, `docs/prompts/LoopLink_PROMPT.md`, `docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md`.
 
 ---
 
