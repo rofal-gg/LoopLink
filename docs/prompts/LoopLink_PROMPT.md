@@ -54,7 +54,7 @@ Simpan semua sebagai file migration terpisah di folder supabase/migrations/, dan
 Jalankan Fase 2 di docs/sdd/LoopLink_TASKS.md — delegasikan ke looplink-ai-ml-integration.
 
 Buatkan di lib/ai/:
-1. klasifikasi.js — fungsi klasifikasiCitra() yang memanggil HuggingFace watersplash/waste-classification, dengan threshold confidence 0.6 untuk flag perlu_koreksi_manual
+1. klasifikasi.js — fungsi klasifikasiCitra() yang memanggil model `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router; label ImageNet-1k dipetakan ke 12 kategori LoopLink lewat `PEMETAAN_LABEL_IMAGENET`, dengan threshold confidence 0.6 untuk flag perlu_koreksi_manual
 2. ekstraksi.js — fungsi ekstraksiDeskripsi() yang memanggil Gemini 1.5 Flash untuk mengekstrak kondisi & catatan dari deskripsi bebas user
 3. matching.js — fungsi hitungJarakKm() (Haversine) dan hitungSkorKecocokan() (rule-based, bobot 0.5/0.3/0.2), sesuai formula di docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md
 

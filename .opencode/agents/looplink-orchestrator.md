@@ -19,7 +19,7 @@ Kamu adalah koordinator pengembangan **LoopLink** — platform bursa pertukaran 
 **Stack:**
 - Frontend: Next.js + Tailwind CSS
 - Database & Auth: Supabase (Postgres + Auth + RLS)
-- Computer Vision: `watersplash/waste-classification` (HuggingFace, 12 kelas)
+- Computer Vision: `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router + pemetaan `PEMETAAN_LABEL_IMAGENET` (12 kelas)
 - Generative AI: Gemini 1.5 Flash (Google AI Studio)
 - Matching: rule-based via tabel `kategori_kecocokan`, **tanpa** sentence embedding
 

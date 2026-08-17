@@ -48,12 +48,19 @@ Mendefinisikan kategori limbah apa cocok untuk kebutuhan apa, diisi manual berda
 | Biological | Kompos | 1.0 |
 | Clothes | Bahan baku tekstil daur ulang | 1.0 |
 | Metal | Bahan baku pengecoran | 1.0 |
-| Plastic | Bahan bakar RDF (Refuse-Derived Fuel) | 0.7 |
+| Plastic | Bahan bakar RDF | 0.7 |
+| Paper | Bahan baku daur ulang kertas | 1.0 |
+| Paper | Bahan bakar biomassa | 0.8 |
+| Brown-glass | Bahan baku daur ulang kaca | 1.0 |
+| Green-glass | Bahan baku daur ulang kaca | 1.0 |
+| White-glass | Bahan baku daur ulang kaca | 1.0 |
+
+Baris baseline (7 baris pertama) berasal dari `seed.sql`; lima baris tambahan `Paper` dan kaca (`Bahan baku daur ulang kaca`) ditambahkan kemudian lewat migration `202608150012_kategori_kecocokan_paper_kaca_check.sql`.
 
 ### Batasan Tabel `kategori_kecocokan` (Status Saat Ini)
 
 - **`Shoes` sengaja tidak memiliki baris aturan** — keputusan sadar (ditunda), bukan kelupaan. Konsekuensinya skor matching `Shoes` terhadap semua kebutuhan = 0, sehingga listing sepatu tidak akan pernah muncul di hasil pencarian. Penundaan ini terkait prioritas skenario juri/demo yang berfokus pada kertas, kaca, organik, logam, dan plastik.
-- Kategori kebutuhan **`Bahan baku daur ulang kaca`** akan diperkenalkan untuk tiga varian kaca (Brown / Green / White-glass) sebagai tujuan reuse cullet. Kaca sengaja dipertahankan sebagai tiga kategori terpisah demi presisi pemilahan warna.
+- Kategori kebutuhan **`Bahan baku daur ulang kaca`** sudah diperkenalkan untuk tiga varian kaca (Brown / Green / White-glass) sebagai tujuan reuse cullet — ditambahkan lewat migration `202608150012_kategori_kecocokan_paper_kaca_check.sql` (bukan bagian baseline `seed.sql`), begitu juga dua jalur baru `Paper`. Kaca sengaja dipertahankan sebagai tiga kategori terpisah demi presisi pemilahan warna. Migration tersebut juga menambahkan CHECK constraint `riwayat_pencarian_kategori_dicari_check`: nilai `kategori_dicari` dibatasi ke 7 nilai kebutuhan kurasi + marker `__lainnya__` (alur "Lainnya" tidak lagi menyimpan teks bebas mentah).
 
 ### Formula Skor Akhir
 
