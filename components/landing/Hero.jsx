@@ -101,6 +101,17 @@ export default function Hero({ loggedIn = false }) {
           zIndex: 2,
         }}
       >
+        <div
+          role="group"
+          aria-label="Logo institusi mitra"
+          className="hero-partner-logos"
+        >
+          <img src="/UTM.webp" alt="UTM" />
+          <img src="/TRIPLE-C.webp" alt="Triple C" />
+          <img src="/TCC.webp" alt="TCC" className="hero-partner-tall" />
+          <img src="/JACK%20TRIPLE-C.webp" alt="Jack" className="hero-partner-tall" />
+        </div>
+
         <div className="hero-grid">
           <div className="hero-text">
             <div
@@ -369,14 +380,21 @@ export default function Hero({ loggedIn = false }) {
         </div>
       </div>
       <style>{`
-        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 100px 0; }
+        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 48px 0 100px; }
+        .hero-partner-logos { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 54px; margin-top: 72px; }
+        .hero-partner-logos img { height: 75px; width: auto; object-fit: contain; opacity: 1; filter: none; transition: filter 0.2s ease, opacity 0.2s ease; }
+        .hero-partner-logos img.hero-partner-tall { height: 96px; }
+        .hero-partner-logos img:hover { filter: brightness(1.06); }
         .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
         .hero-cards { display: flex; flex-direction: column; position: relative; z-index: 3; }
         .hero-blob-1, .hero-blob-2 { display: block; }
         .hero-blob-mobile { display: none; }
         @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
         @media (max-width: 767px) {
-          .hero-grid { grid-template-columns: 1fr; gap: 32px; padding: 80px 0 60px; }
+          .hero-grid { grid-template-columns: 1fr; gap: 32px; padding: 36px 0 60px; }
+          .hero-partner-logos { gap: 33px; margin-top: 54px; }
+          .hero-partner-logos img { height: 51px; }
+          .hero-partner-logos img.hero-partner-tall { height: 60px; }
           .hero-blob-1, .hero-blob-2 { display: none; }
           .hero-blob-mobile { display: block; }
           .hero-ctas { flex-direction: column; }
@@ -384,7 +402,7 @@ export default function Hero({ loggedIn = false }) {
           .float-card-0, .float-card-1 { margin-left: 0 !important; }
         }
         @media (min-width: 768px) and (max-width: 1023px) {
-          .hero-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 80px 0; }
+          .hero-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 44px 0 80px; }
         }
       `}</style>
     </section>

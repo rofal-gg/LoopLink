@@ -162,6 +162,17 @@
 - ✅ **Skenario 7 (Mobile)** — Chrome headless + CDP (viewport 390×844, DPR 3): 11 halaman (landing, login, home, cari, upload, setup-lokasi, listing-saya, klaim-saya, profil, pengaturan, detail) **tanpa overflow horizontal** (scroll=390/390) + tombol Amankan tampil untuk non-pemilik. Screenshot di `/tmp/looplink-mobile-*.png`.
 - 🧹 **Perbaikan test (bukan bug aplikasi):** 4 asersi awal di script test salah ekspektasi schema → (1) `riwayat_klaim` sengaja hanya mencatat status terminal `('selesai','dibatalkan')` (migration 002) sehingga klaim aktif diverifikasi via `listings.status`/`diklaim_oleh`; (2) kolom `dibatalkan_oleh` ada di `listings`, bukan `riwayat_klaim`; (3) upload storage perlu `setSession` di client test; (4) deteksi tombol "Amankan" via query DOM (bukan substring 120 char pertama).
 
+### Fase 6 — Persiapan Deployment (logo partner di landing) — separuh jalan
+
+> 18 Agu — penambahan 4 logo partner (UTM, Triple-C, TCC, Jack) di landing page oleh `design-taste-frontend` atas arahan user. PURE UI di 2 file (`Navbar.jsx`, `Hero.jsx`); tidak ada perubahan schema/RLS/RPC/API. Bagian dari item Fase 6 di TASKS.md: "logo UKM Triple-C/TCC/Jack 2026".
+
+- ✅ **Aset gambar** — 4 file `.webp` baru di `public/` (masih untracked di git, perlu di-commit saat selesai): `UTM.webp`, `TRIPLE-C.webp`, `TCC.webp`, `JACK TRIPLE-C.webp` (nama file `JACK TRIPLE-C.webp` memakai spasi — di-referensikan URL-safe sebagai `/JACK%20TRIPLE-C.webp`, file tidak di-rename).
+- ✅ **Navbar (`components/landing/Navbar.jsx`)** — pill kaca `.lg-logos` di pojok kanan: urutan kiri→kanan **UTM, Triple C, TCC, Jack**; **desktop-only** (hidden <1024px, ikut pola `.lg-cta` via media query); tampil baik saat loggedIn maupun tidak; **warna logo dipertahankan penuh** (feedback user: versi awal `filter: grayscale(1)` + opacity 0.72 bikin logo tampak putih → dihapus, hover diganti `brightness(1.1)` + lift 1px); ukuran logo di-set **seukuran kotak auth** (tinggi 36px, jadi pill ≈ 50px; 28px di 1024–1280px); posisi awal setelah CTA, lalu **ditukar sesuai user** → urutan sekarang: logo di kiri, box auth ("Masuk" + "Daftar Gratis") di kanannya, hamburger tetap di ujung.
+- ✅ **Hero (`components/landing/Hero.jsx`)** — band `.hero-partner-logos` ditaruh sebagai **child pertama kontainer Hero** (centered, di ruang antara navbar & headline "Limbahmu, / Peluang Orang Lain."): 4 logo urutan sama, full color (no grayscale), `width: auto` + `objectFit: contain`; **dua level tinggi karena rasio asli tidak seragam** (UTM & Triple-C hampir persegi vs TCC & Jack ramping/potret): UTM/TRIPLE-C 75px & TCC/JACK 96px (desktop), 51/60px (mobile); gap 54px (33px mobile); `margin-top` band ikut naik saat logo diperbesar (48→72px) agar tidak menabrak navbar; padding atas `.hero-grid` tidak diubah (jarak band→headline tetap ~48px).
+- ✅ **Riwayat iterasi ukuran (semua atas arahan user):** hero 40/52px → 50/64px (+25%) → 75/96px (+50%); navbar 26→36px (seukuran auth).
+- ✅ **Verifikasi:** lint `Navbar.jsx` & `Hero.jsx` **0 error** (warning `no-img-element` pra-ada & konsisten dengan konvensi file yang memakai `<img>` polos); hanya kedua file tersebut yang modified di working tree (git status: `M components/landing/Navbar.jsx`, `M components/landing/Hero.jsx`).
+- ⚠️ **Belum (lanjutan Fase 6):** commit aset + perubahan, deploy frontend ke Vercel, env production, migration/seed production, test ulang alur production, verifikasi HF live dari jaringan produksi.
+
 ### Fase 2 — sisa verifikasi live (opsional, tidak menahan fase berikutnya)
 
 | Task | Status | Blocker |
