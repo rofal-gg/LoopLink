@@ -233,6 +233,52 @@ export default function Navbar({ loggedIn = false }) {
             )}
           </div>
 
+          {/* PILL 3b — Partner logos (desktop only) */}
+          <div
+            className="lg-logos"
+            role="group"
+            aria-label="Logo institusi mitra"
+            style={{
+              display: "none",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(28,43,34,0.38)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 14,
+              padding: "6px",
+              boxShadow:
+                "0 4px 20px rgba(28,43,34,0.14), inset 0 1px 0 rgba(255,255,255,0.05)",
+              transition: "background 0.2s, box-shadow 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(28,43,34,0.55)";
+              e.currentTarget.style.boxShadow =
+                "0 6px 28px rgba(28,43,34,0.22), inset 0 1px 0 rgba(255,255,255,0.07)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(28,43,34,0.38)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 20px rgba(28,43,34,0.14), inset 0 1px 0 rgba(255,255,255,0.05)";
+            }}
+          >
+            {[
+              { src: "/UTM.webp", alt: "UTM" },
+              { src: "/TRIPLE-C.webp", alt: "Triple C" },
+              { src: "/TCC.webp", alt: "TCC" },
+              { src: "/JACK%20TRIPLE-C.webp", alt: "Jack" },
+            ].map((logo) => (
+              <img
+                key={logo.src}
+                src={logo.src}
+                alt={logo.alt}
+                className="lg-logo-img"
+                style={{ display: "block", width: "auto", objectFit: "contain" }}
+              />
+            ))}
+          </div>
+
           {/* Hamburger */}
           <button
             className="hamburger"
@@ -391,9 +437,23 @@ export default function Navbar({ loggedIn = false }) {
       </div>
 
       <style>{`
+        .lg-logo-img {
+          height: 36px;
+          opacity: 1;
+          transition: filter 0.18s, transform 0.18s;
+        }
+        .lg-logos:hover .lg-logo-img {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+        @media (min-width: 1024px) and (max-width: 1280px) {
+          .lg-logos { padding: 5px 6px !important; gap: 6px !important; }
+          .lg-logo-img { height: 28px; }
+        }
         @media (min-width: 1024px) {
           .lg-nav { display: flex !important; }
           .lg-cta { display: flex !important; }
+          .lg-logos { display: flex !important; }
           .hamburger { display: none !important; }
           .mobile-menu { display: none !important; }
         }
