@@ -2,11 +2,26 @@
 
 import { useState } from "react";
 import { ArrowRight, Sprout, Recycle, Wrench, FileText, Shirt } from "lucide-react";
-import { P, Eyebrow, useInView } from "./shared";
+import { P, Eyebrow } from "./shared";
+import { SourceLabel, formatAngka, formatPersen } from "./format";
 
-/* ─── Trust Band ─── */
-export default function TrustBand() {
-  const { ref, inView } = useInView();
+/* ─── Trust Band ───
+ * Klaim AI disesuaikan dengan data nyata:
+ *   - "94% akurasi" → rata-rata keyakinan AI dari data.statistik (atau "—").
+ *   - "<3s klasifikasi" (tidak bisa diverifikasi) → jumlah listing tersedia.
+ *   - "50+ jenis limbah" → 12 kelas limbah model (jumlah kelas model AI).
+ */
+
+export default function TrustBand({ statistik = null }) {
+  const persen = statistik ? formatPersen(statistik.rata_rata_confidence) : "—";
+  const listing = statistik ? formatAngka(statistik.listing_tersedia) : "—";
+
+  const stats = [
+    { val: persen, label: "Rata-rata keyakinan AI (dari data listings)" },
+    { val: listing, label: "Listing tersedia" },
+    { val: "12", label: "Kelas limbah model" },
+  ];
+
   const categories = [
     { CatIcon: Sprout, label: "Organik" },
     { CatIcon: Recycle, label: "Plastik" },
@@ -14,10 +29,9 @@ export default function TrustBand() {
     { CatIcon: FileText, label: "Kertas" },
     { CatIcon: Shirt, label: "Tekstil" },
   ];
+
   return (
     <section
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#1C2B22", padding: "60px 0 100px" }}
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
@@ -48,16 +62,12 @@ export default function TrustBand() {
                 marginBottom: 36,
               }}
             >
-              Model AI kami terlatih mengenali puluhan jenis limbah dari foto
+              Model AI kami terlatih mengenali beragam jenis limbah dari foto
               saja. Cukup ambil gambar - sistem langsung memberi label,
-              kategori, dan saran distribusi terbaik.
+              kategori, dan nilai keyakinan.
             </p>
-            <div style={{ display: "flex", gap: 24, marginBottom: 36, flexWrap: "wrap" }}>
-              {[
-                { val: "94%", label: "Akurasi AI" },
-                { val: "<3s", label: "Waktu klasifikasi" },
-                { val: "50+", label: "Jenis limbah" },
-              ].map((s, i) => (
+            <div style={{ display: "flex", gap: 24, marginBottom: 28, flexWrap: "wrap" }}>
+              {stats.map((s, i) => (
                 <div key={i}>
                   <div
                     style={{
@@ -76,12 +86,20 @@ export default function TrustBand() {
                       fontSize: "0.7rem",
                       color: "#8C9184",
                       marginTop: 4,
+                      maxWidth: 180,
+                      lineHeight: 1.5,
                     }}
                   >
                     {s.label}
                   </div>
                 </div>
               ))}
+            </div>
+            <div style={{ marginBottom: 36 }}>
+              <SourceLabel
+                tanggal={statistik?.tanggal_pembaruan ?? null}
+                color="#8C9184"
+              />
             </div>
             <a
               className="btn-primary"

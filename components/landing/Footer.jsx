@@ -1,56 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Leaf } from "lucide-react";
+import { Leaf, Mail, MapPin } from "lucide-react";
 import { Mark } from "./shared";
 
 /* ─── Footer ─── */
-function SocialBtn({ label }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <a
-      href="#"
-      aria-label={label}
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: 8,
-        border: `1px solid ${hovered ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.1)"}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: hovered ? "#F6F3EA" : "#8C9184",
-        backgroundColor: hovered ? "rgba(255,255,255,0.06)" : "transparent",
-        transition: "all 0.18s",
-        transform: hovered ? "translateY(-2px)" : "translateY(0)",
-        minWidth: 36,
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {label}
-    </a>
-  );
-}
-
 export default function Footer() {
   const links = {
     Jelajahi: [
       { label: "Semua Listing", href: "/cari" },
       { label: "Kategori Limbah", href: "#kategori" },
       { label: "Cara Kerja", href: "#cara-kerja" },
-      { label: "Peta Pertukaran", href: "#beranda" },
+      { label: "Dampak", href: "#dampak" },
     ],
     Bantuan: [
       { label: "Cara Pakai", href: "#cara-kerja" },
       { label: "FAQ", href: "#bantuan" },
-      { label: "Panduan AI", href: "#tentang" },
-      { label: "Laporkan Masalah", href: "#bantuan" },
+      { label: "Klasifikasi AI", href: "#fitur" },
+      { label: "Hubungi Kami", href: "mailto:hello@looplink.id" },
     ],
     Kontak: [
       { label: "hello@looplink.id", href: "mailto:hello@looplink.id" },
-      { label: "Tentang Kami", href: "#tentang" },
+      { label: "Tentang Kami", href: "#beranda" },
       { label: "Masuk", href: "/login" },
       { label: "Daftar", href: "/register" },
     ],
@@ -69,10 +40,36 @@ export default function Footer() {
             <p style={{ color: "#8C9184", fontSize: "0.85rem", lineHeight: 1.75, marginBottom: 24 }}>
               Menghubungkan limbah dengan peluang, di radius terdekatmu.
             </p>
-            <div style={{ display: "flex", gap: 10, marginBottom: 28 }}>
-              <SocialBtn label="Twitter / X" />
-              <SocialBtn label="Instagram" />
-              <SocialBtn label="LinkedIn" />
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+              <a
+                href="mailto:hello@looplink.id"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#8C9184",
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#F6F3EA")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#8C9184")}
+              >
+                <Mail size={14} color="#3C7A5C" strokeWidth={2} />
+                hello@looplink.id
+              </a>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#8C9184",
+                  fontSize: "0.85rem",
+                }}
+              >
+                <MapPin size={14} color="#3C7A5C" strokeWidth={2} />
+                Indonesia · Hiper-lokal
+              </span>
             </div>
             <div
               style={{
@@ -96,8 +93,14 @@ export default function Footer() {
                   }}
                 />
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "#DCE3D3" }}>
-                  Semua sistem berjalan normal
+                  Status: Aplikasi aktif
                 </span>
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "#6bba91", marginTop: 6 }}>
+                Data: database LoopLink
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#6C7265", marginTop: 4 }}>
+                diperbarui mengikuti data
               </div>
             </div>
           </div>
@@ -170,24 +173,19 @@ export default function Footer() {
           }}
         >
           <span style={{ color: "#8C9184", fontSize: "0.82rem" }}>
-            © 2025 LoopLink. Hak cipta dilindungi.
+            © {new Date().getFullYear()} LoopLink. Hak cipta dilindungi.
           </span>
           <div style={{ display: "flex", gap: 20 }}>
             {["Kebijakan Privasi", "Syarat & Ketentuan", "Cookie"].map((l) => (
-              <a
+              <span
                 key={l}
-                href="#"
                 style={{
-                  color: "#8C9184",
+                  color: "#6C7265",
                   fontSize: "0.78rem",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#F6F3EA")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#8C9184")}
               >
                 {l}
-              </a>
+              </span>
             ))}
           </div>
           <span style={{ color: "#8C9184", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: 6 }}>

@@ -2,14 +2,14 @@
 
 Kumpulan prompt siap-tempel untuk dikirim ke opencode (akan ditangani `looplink-orchestrator` sebagai primary agent). Kirim **satu per satu, berurutan** — jangan digabung sekaligus, supaya tiap fase bisa dicek dulu hasilnya sebelum lanjut ke fase berikutnya.
 
-Sebelum mulai, pastikan 5 file agent (`looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend`) sudah terpasang, dan 4 file dokumentasi SDD (`LoopLink_Tahap1_Ide_Inisiasi.md`, `LoopLink_Tahap2_Requirements_Spec.md`, `LoopLink_Tahap3_Design_Arsitektur.md`, `LoopLink_TASKS.md`) ada di root project.
+Sebelum mulai, pastikan 5 file agent (`looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend`) sudah terpasang, dan 4 file dokumentasi SDD (`docs/sdd/LoopLink_Tahap1_Ide_Inisiasi.md`, `docs/sdd/LoopLink_Tahap2_Requirements_Spec.md`, `docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md`, `docs/sdd/LoopLink_TASKS.md`) ada di `docs/sdd/`.
 
 ---
 
 ## Prompt 0 — Muat Konteks Project
 
 ```
-Sebelum mulai kerja apa pun, baca file LoopLink_Tahap1_Ide_Inisiasi.md, LoopLink_Tahap2_Requirements_Spec.md, LoopLink_Tahap3_Design_Arsitektur.md, dan LoopLink_TASKS.md di root project ini. Pahami spec, aturan bisnis, schema database, dan daftar task yang sudah ditentukan. Jangan ambil keputusan baru yang bertentangan dengan dokumen-dokumen ini. Setelah selesai membaca, ringkas ke aku dalam 5-6 kalimat apa yang kamu pahami tentang project ini, supaya aku bisa konfirmasi sebelum kita mulai build.
+Sebelum mulai kerja apa pun, baca file docs/sdd/LoopLink_Tahap1_Ide_Inisiasi.md, docs/sdd/LoopLink_Tahap2_Requirements_Spec.md, docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md, dan docs/sdd/LoopLink_TASKS.md (semua di folder docs/sdd/). Pahami spec, aturan bisnis, schema database, dan daftar task yang sudah ditentukan. Jangan ambil keputusan baru yang bertentangan dengan dokumen-dokumen ini. Setelah selesai membaca, ringkas ke aku dalam 5-6 kalimat apa yang kamu pahami tentang project ini, supaya aku bisa konfirmasi sebelum kita mulai build.
 ```
 
 ---
@@ -32,11 +32,11 @@ Jangan proses instalasi package yang butuh aku isi API key dulu — cukup siapka
 ## Prompt 2 — Database & Supabase (Fase 1)
 
 ```
-Jalankan Fase 1 di LoopLink_TASKS.md — delegasikan ke looplink-database-supabase.
+Jalankan Fase 1 di docs/sdd/LoopLink_TASKS.md — delegasikan ke looplink-database-supabase.
 
 Buatkan:
 1. File migration SQL untuk semua tabel inti (profiles, listings, listing_photos, kategori_kecocokan) dan tabel pendukung (riwayat_klaim, laporan, riwayat_pencarian, riwayat_pencarian_hasil)
-2. RLS policy lengkap untuk setiap tabel sesuai kebijakan yang sudah ditentukan di LoopLink_Tahap3_Design_Arsitektur.md
+2. RLS policy lengkap untuk setiap tabel sesuai kebijakan yang sudah ditentukan di docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md
 3. Revoke UPDATE langsung untuk kolom status/diklaim_oleh/dibatalkan_oleh dari role authenticated
 4. RPC function: claim_listing, complete_listing, cancel_claim
 5. Index untuk lokasi (lokasi_lat, lokasi_lng) dan status pada listings
@@ -51,12 +51,12 @@ Simpan semua sebagai file migration terpisah di folder supabase/migrations/, dan
 ## Prompt 3 — AI/ML Integration (Fase 2)
 
 ```
-Jalankan Fase 2 di LoopLink_TASKS.md — delegasikan ke looplink-ai-ml-integration.
+Jalankan Fase 2 di docs/sdd/LoopLink_TASKS.md — delegasikan ke looplink-ai-ml-integration.
 
 Buatkan di lib/ai/:
-1. klasifikasi.js — fungsi klasifikasiCitra() yang memanggil HuggingFace watersplash/waste-classification, dengan threshold confidence 0.6 untuk flag perlu_koreksi_manual
+1. klasifikasi.js — fungsi klasifikasiCitra() yang memanggil model `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router; label ImageNet-1k dipetakan ke 12 kategori LoopLink lewat `PEMETAAN_LABEL_IMAGENET`, dengan threshold confidence 0.6 untuk flag perlu_koreksi_manual
 2. ekstraksi.js — fungsi ekstraksiDeskripsi() yang memanggil Gemini 1.5 Flash untuk mengekstrak kondisi & catatan dari deskripsi bebas user
-3. matching.js — fungsi hitungJarakKm() (Haversine) dan hitungSkorKecocokan() (rule-based, bobot 0.5/0.3/0.2), sesuai formula di LoopLink_Tahap3_Design_Arsitektur.md
+3. matching.js — fungsi hitungJarakKm() (Haversine) dan hitungSkorKecocokan() (rule-based, bobot 0.5/0.3/0.2), sesuai formula di docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md
 
 Pastikan semua fungsi punya timeout 10 detik dan fallback yang jelas kalau API eksternal gagal — jangan sampai error mentah bocor ke pemanggil. Tulis juga file test sederhana (bisa manual script, tidak perlu framework testing penuh) untuk memverifikasi masing-masing fungsi jalan dengan benar menggunakan data contoh.
 ```
@@ -66,7 +66,7 @@ Pastikan semua fungsi punya timeout 10 detik dan fallback yang jelas kalau API e
 ## Prompt 4 — Backend API (Fase 3)
 
 ```
-Jalankan Fase 3 di LoopLink_TASKS.md — delegasikan ke looplink-backend-api.
+Jalankan Fase 3 di docs/sdd/LoopLink_TASKS.md — delegasikan ke looplink-backend-api.
 
 Buatkan seluruh API route di app/api/ sesuai daftar endpoint di looplink-backend-api.md:
 - POST /api/listings/klasifikasi
@@ -91,7 +91,7 @@ Kirim per kelompok flow, jangan sekaligus semua — supaya tiap alur bisa dicek 
 ### 5a — Autentikasi & Onboarding
 
 ```
-Jalankan bagian 4.1 dan 4.2 di LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
+Jalankan bagian 4.1 dan 4.2 di docs/sdd/LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
 
 Bacaan brief untuk design read: platform marketplace hiper-lokal untuk pertukaran limbah, target pengguna sangat luas (rumah tangga sampai UMKM/industri), harus terasa terpercaya tapi tetap approachable — bukan enterprise-B2B yang kaku, tapi juga bukan konsumer flashy. Bangun:
 1. Landing Page
@@ -105,7 +105,7 @@ Sambungkan ke endpoint auth Supabase dan /api yang sudah dibuat di Prompt 4.
 ### 5b — Flow Upload Limbah
 
 ```
-Jalankan bagian 4.3 di LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
+Jalankan bagian 4.3 di docs/sdd/LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
 
 Bangun flow upload limbah lengkap:
 1. Upload Foto (capture kamera di mobile / pilih file di desktop)
@@ -121,7 +121,7 @@ Sambungkan ke /api/listings/klasifikasi, /api/listings/ekstraksi-teks, dan /api/
 ### 5c — Flow Cari Bahan & Detail Listing
 
 ```
-Jalankan bagian 4.4 dan 4.5 di LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
+Jalankan bagian 4.4 dan 4.5 di docs/sdd/LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
 
 Bangun:
 1. Form Pencarian (kategori kebutuhan + radius slider)
@@ -138,7 +138,7 @@ Pastikan tombol "Amankan" TIDAK muncul kalau listing yang dilihat adalah milik u
 ### 5d — Manajemen Pribadi & Error State
 
 ```
-Jalankan bagian 4.6 dan 4.7 di LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
+Jalankan bagian 4.6 dan 4.7 di docs/sdd/LoopLink_TASKS.md — delegasikan ke design-taste-frontend.
 
 Bangun:
 1. Listing Saya (tab/filter: Semua, Tersedia, Dipesan, Selesai)
@@ -155,7 +155,7 @@ Semua halaman ini mengonsumsi data dari user yang sedang login (session Supabase
 ## Prompt 6 — Integrasi & Testing End-to-End (Fase 5)
 
 ```
-Bantu aku testing end-to-end sesuai Fase 5 di LoopLink_TASKS.md. Jalankan/simulasikan skenario berikut dan laporkan hasilnya satu per satu:
+Bantu aku testing end-to-end sesuai Fase 5 di docs/sdd/LoopLink_TASKS.md. Jalankan/simulasikan skenario berikut dan laporkan hasilnya satu per satu:
 1. Registrasi akun baru → setup lokasi → upload foto limbah → cek AI mengklasifikasi dengan benar → koreksi kategori → listing tayang
 2. Login akun lain → cari bahan → pastikan listing dari akun pertama muncul di hasil dengan skor kecocokan yang masuk akal → buka detail → klaim → kontak muncul
 3. Kembali ke akun pertama (pemilik) → tandai transaksi selesai → cek status berubah dan tercatat di riwayat_klaim
@@ -172,7 +172,7 @@ Kalau ada yang gagal, perbaiki dan laporkan apa yang diperbaiki.
 ## Prompt 7 — Deployment (Fase 6)
 
 ```
-Bantu aku deploy LoopLink sesuai Fase 6 di LoopLink_TASKS.md:
+Bantu aku deploy LoopLink sesuai Fase 6 di docs/sdd/LoopLink_TASKS.md:
 1. Siapkan project untuk deploy ke Vercel (vercel.json kalau perlu, cek build lolos tanpa error)
 2. Buatkan checklist environment variable yang perlu aku isi di dashboard Vercel
 3. Buatkan instruksi menjalankan migration dan seed data di Supabase production (bukan cuma local)
@@ -185,7 +185,7 @@ Bantu aku deploy LoopLink sesuai Fase 6 di LoopLink_TASKS.md:
 ## Prompt 8 — Persiapan Demo (Fase 7)
 
 ```
-Bantu aku siapkan bahan presentasi sesuai Fase 7 di LoopLink_TASKS.md:
+Bantu aku siapkan bahan presentasi sesuai Fase 7 di docs/sdd/LoopLink_TASKS.md:
 1. Buatkan skrip skenario demo langkah-demi-langkah (akun mana melakukan apa, secara berurutan) yang menunjukkan alur upload → klasifikasi AI → matching → klaim → selesai, dari data seed yang sudah ada
 2. Siapkan ringkasan poin-poin yang wajib dijelaskan sesuai ketentuan lomba: AI yang dipakai, tujuan penggunaannya, prompt garis besar, bagian yang dihasilkan AI vs dikembangkan mandiri, dan penjelasan skalabilitas (index lokasi sekarang vs rencana PostGIS)
 3. Siapkan draf deskripsi karya maksimal 150 kata untuk pengumpulan
@@ -195,6 +195,6 @@ Bantu aku siapkan bahan presentasi sesuai Fase 7 di LoopLink_TASKS.md:
 
 ## Catatan Pemakaian
 
-- Kalau salah satu prompt menghasilkan sesuatu yang menyimpang dari spec (LoopLink_Tahap1-3.md), langsung koreksi di chat sebelum lanjut ke prompt berikutnya — jangan biarkan penyimpangan menumpuk ke fase selanjutnya.
+- Kalau salah satu prompt menghasilkan sesuatu yang menyimpang dari spec (docs/sdd/LoopLink_Tahap1-3.md), langsung koreksi di chat sebelum lanjut ke prompt berikutnya — jangan biarkan penyimpangan menumpuk ke fase selanjutnya.
 - Prompt 5 (Frontend) sengaja dipecah 4 bagian karena UI paling banyak butuh iterasi visual — cek tiap bagian sebelum lanjut.
 - Kalau butuh mengulang satu bagian kecil saja (misal cuma memperbaiki satu halaman), tidak perlu kirim ulang prompt satu fase penuh — cukup jelaskan bagian spesifiknya di chat biasa.

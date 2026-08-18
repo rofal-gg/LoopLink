@@ -15,14 +15,18 @@
 //   }
 //
 // Response 200: { hasil: [{ listing_id, judul, kategori_citra, jarak_km,
-//                           skor_akhir, foto_url, jumlah, satuan }] }
+//                           skor_akhir, foto_url, jumlah, satuan,
+//                           di_luar_jangkauan }] }
 //
 // Alur:
 //   1. Ambil tabel `kategori_kecocokan` (public read).
 //   2. Ambil kandidat: listings status='tersedia' DAN user_id != user.id
 //      (filter listing sendiri secara manual).
-//   3. Hitung jarak Haversine; SKIP kalau jarak > radiusKm (aturan radius).
-//      Hitung skor akhir; SKIP kalau 0.
+//   3. Hitung jarak Haversine; hitung skor akhir; SKIP kalau 0.
+//      Radius TIDAK memotong kandidat — hanya penanda `di_luar_jangkauan`
+//      di tiap hasil. Kandidat di luar radius tetap ikut dihitung skornya
+//      (kontribusi skor_jarak jadi 0, tapi kategori & volume tetap memberi
+//      bobot), konsisten dengan keputusan katalog marketplace.
 //   4. Urutkan skor_akhir DESC, batasi 50 hasil.
 //   5. Simpan riwayat memakai service-role client (tabel ini tidak punya
 //      policy INSERT untuk authenticated). Kegagalan menyimpan riwayat
@@ -105,8 +109,10 @@ export async function POST(request) {
       continue;
     }
 
-    // Aturan radius wajib: di luar radius tidak muncul.
-    if (jarakKm > radiusKm) continue;
+    // Radius TIDAK memotong kandidat — hanya penanda di_luar_jangkauan di
+    // hasil. Kandidat di luar radius tetap dihitung skornya (skor_jarak
+    // jadi 0, kategori & volume tetap memberi bobot).
+    const diLuarJangkauan = jarakKm > radiusKm;
 
     const skorAkhir = hitungSkorKecocokan({
       kategoriListing: l.kategori_citra,
@@ -133,6 +139,7 @@ export async function POST(request) {
       foto_url: fotoUrl,
       jumlah: l.jumlah,
       satuan: l.satuan,
+      di_luar_jangkauan: diLuarJangkauan,
     });
   }
 

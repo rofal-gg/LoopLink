@@ -27,9 +27,11 @@ Bukan sekadar tempat "buang sampah biar didaur ulang" seperti platform daur ulan
 
 | Tugas | Teknologi | Jenis |
 |---|---|---|
-| Klasifikasi jenis limbah dari foto | `watersplash/waste-classification` (HuggingFace) | Computer Vision (ML utama) |
-| Ekstraksi detail dari teks tambahan | Gemini 1.5 Flash (Google AI Studio) | Generative AI |
+| Klasifikasi jenis limbah dari foto | `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router + pemetaan `PEMETAAN_LABEL_IMAGENET` ke 12 kategori | Computer Vision (ML utama) |
+| Ekstraksi detail dari teks tambahan | Gemini 1.5 Flash (Google AI Studio, dipanggil lewat alias `gemini-flash-latest`) | Generative AI |
 | Skor akhir kecocokan | Formula rule-based (tabel kecocokan kategori + jarak + volume, tanpa embedding) | Logika bisnis |
+
+**Riwayat keputusan (catatan sejarah):** rencana awal klasifikasi citra memakai `watersplash/waste-classification` (HuggingFace, 12 kelas limbah langsung). Model itu sudah tidak diserve provider mana pun, jadi keputusan final diganti ke `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router + tabel pemetaan label `PEMETAAN_LABEL_IMAGENET` (detail di Tahap 3 dan `lib/ai/klasifikasi.js`). Gemini TIDAK dipakai untuk klasifikasi citra — perannya hanya ekstraksi teks.
 
 ---
 

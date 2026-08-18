@@ -1,6 +1,6 @@
 "use client";
 
-// LoopLink - Helper client untuk flow cari bahan (Fase 4.4).
+// LoopLink - Helper client untuk flow katalog & cari bahan (Fase 4.4 / 4.7).
 // Memanggil endpoint Fase 3 (cookie sesi dikirim otomatis).
 
 /** Baca pesan error dari response API ({ error: string }) dengan fallback. */
@@ -33,4 +33,31 @@ export async function cariBahan(body) {
     );
   }
   return data;
+}
+
+/**
+ * GET /api/listings/katalog - katalog marketplace: semua listing tersedia
+ * milik user lain. Kategori & radius opsional; radius TIDAK memotong hasil
+ * (hanya penanda `di_luar_jangkauan`). Param yang tidak diisi tidak
+ * disertakan supaya backend memakai nilai default.
+ * @param {{ kategori?: string, radius?: number|string }} opsi
+ */
+export async function ambilKatalog({ kategori, radius } = {}) {
+  const params = new URLSearchParams();
+  if (kategori != null && String(kategori).trim() !== "") {
+    params.set("kategori", String(kategori).trim());
+  }
+  if (radius != null && String(radius).trim() !== "") {
+    const nilai = Number(radius);
+    if (Number.isFinite(nilai) && nilai > 0) {
+      params.set("radius", String(nilai));
+    }
+  }
+  const query = params.toString();
+  const res = await fetch(`/api/listings/katalog${query ? `?${query}` : ""}`);
+  if (!res.ok) {
+    throw new Error(await bacaError(res, "Gagal memuat katalog. Silakan coba lagi."));
+  }
+  const data = await res.json().catch(() => null);
+  return data ?? { hasil: [] };
 }

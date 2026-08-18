@@ -2,6 +2,8 @@
 // Nilai kategori kebutuhan DIKIRIM PERSIS ke API (exact match dengan kolom
 // `kategori_kebutuhan` tabel `kategori_kecocokan`). Jangan mengubah ejaan.
 
+import { KATEGORI_LABEL, KATEGORI_MODEL } from "@/components/upload/constants";
+
 /** 7 pilihan kategori kebutuhan yang tersedia di tabel kategori_kecocokan. */
 export const KEBUTUHAN_OPTIONS = [
   {
@@ -52,3 +54,13 @@ export const KEBUTUHAN_LABEL = KEBUTUHAN_OPTIONS.reduce(
   },
   {}
 );
+
+/**
+ * 12 kelas kategori citra untuk filter katalog marketplace. Nilai dikirim
+ * persis ke GET /api/listings/katalog (harus salah satu KATEGORI_MODEL);
+ * label memakai KATEGORI_LABEL dari flow upload (sumber kebenaran tunggal).
+ */
+export const KATEGORI_KATALOG = KATEGORI_MODEL.map((nilai) => ({
+  nilai,
+  label: KATEGORI_LABEL[nilai] ?? nilai,
+}));

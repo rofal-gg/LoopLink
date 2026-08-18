@@ -2,7 +2,8 @@
 //
 // POST /api/listings/klasifikasi — butuh login
 // Klasifikasi citra limbah jadi salah satu dari 12 kelas model
-// (watersplash/waste-classification via HuggingFace).
+// (google/vit-base-patch16-224 via HuggingFace Inference Router +
+// pemetaan label ImageNet PEMETAAN_LABEL_IMAGENET).
 //
 // Menerima foto dalam 2 format (dukung keduanya agar mudah di-curl):
 //   1) Raw binary : Content-Type: application/octet-stream → request.arrayBuffer()

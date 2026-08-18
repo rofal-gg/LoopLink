@@ -1,20 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart, ImagePlus } from "lucide-react";
 import { Eyebrow, useInView } from "./shared";
+import { SourceLabel, labelKategori } from "./format";
 
-/* ─── Community Gallery ─── */
-export default function CommunityGallery() {
+/* ─── Community Gallery ───
+ * Foto asli data.gallery (listing tersedia yang punya foto, max 6).
+ * Caption = judul + kategori nyata. Kalau kosong → CTA lembut, bukan
+ * foto stok fiktif.
+ */
+
+export default function CommunityGallery({ gallery = [] }) {
   const { ref, inView } = useInView();
-  const photos = [
-    { img: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=400&fit=crop&auto=format", caption: "Pertukaran plastik - Bekasi", tall: true },
-    { img: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400&h=280&fit=crop&auto=format", caption: "Komunitas daur ulang - Depok", tall: false },
-    { img: "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=400&h=280&fit=crop&auto=format", caption: "Workshop limbah tekstil - Tangerang", tall: false },
-    { img: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=400&h=560&fit=crop&auto=format", caption: "Pengrajin kain perca - Jakarta", tall: true },
-    { img: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&h=280&fit=crop&auto=format", caption: "Daur ulang organik - Bogor", tall: false },
-    { img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=280&fit=crop&auto=format", caption: "UMKM tekstil daur ulang - Bandung", tall: false },
-  ];
+  const dataGal = (Array.isArray(gallery) ? gallery : []).filter(
+    (g) => g && g.foto_url
+  );
+
+  const photos = dataGal.map((g, i) => ({
+    img: g.foto_url,
+    caption: `${g.judul || "Listing"} · ${labelKategori(g.kategori_citra)}`,
+    tall: i % 3 === 0,
+  }));
+
   return (
     <section
       ref={ref}
@@ -44,14 +52,14 @@ export default function CommunityGallery() {
                 margin: "12px 0 0",
               }}
             >
-              Ribuan aksi nyata
+              Aksi nyata dari komunitas
               <br />
-              <em style={{ fontStyle: "italic", fontWeight: 400 }}>setiap harinya.</em>
+              <em style={{ fontStyle: "italic", fontWeight: 400 }}>di sekitarmu.</em>
             </h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
             <p style={{ color: "#8C9184", fontSize: "0.9rem", margin: 0, maxWidth: 260, textAlign: "right" }}>
-              Bergabung dengan 21.700+ orang yang sudah mengubah limbah jadi nilai.
+              Foto listing yang dibagikan komunitas, langsung dari platform.
             </p>
             <a
               href="/upload"
@@ -69,11 +77,45 @@ export default function CommunityGallery() {
             </a>
           </div>
         </div>
-        <div className="gallery-masonry">
-          {photos.map((p, i) => (
-            <GalleryPhoto key={i} {...p} delay={i * 60} inView={inView} />
-          ))}
-        </div>
+
+        {photos.length === 0 ? (
+          <div
+            style={{
+              borderRadius: 16,
+              backgroundColor: "#fff",
+              border: "1px solid #DCE3D3",
+              padding: "36px 28px",
+              textAlign: "center",
+            }}
+          >
+            <ImagePlus size={28} strokeWidth={1.6} color="#8C9184" style={{ margin: "0 auto 12px" }} />
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                fontSize: "1.1rem",
+                color: "#1C2B22",
+                margin: "0 0 6px",
+              }}
+            >
+              Belum ada foto listing
+            </p>
+            <p style={{ color: "#8C9184", fontSize: "0.9rem", margin: "0 0 0" }}>
+              Unggah limbahmu dan jadilah foto pertama di galeri komunitas.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="gallery-masonry">
+              {photos.map((p, i) => (
+                <GalleryPhoto key={i} {...p} delay={i * 60} inView={inView} />
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 28 }}>
+              <SourceLabel />
+            </div>
+          </>
+        )}
       </div>
       <style>{`
         .gallery-masonry { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 10px; gap: 14px; }

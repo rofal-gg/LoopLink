@@ -3,7 +3,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8) ![Supabase](https://img.shields.io/badge/Supabase-Postgres%2FAuth%2FRLS-3ecf8e) ![HuggingFace](https://img.shields.io/badge/HuggingFace-vit--base--patch16--224-ffd21e) ![Gemini](https://img.shields.io/badge/Gemini-1.5_Flash-4285f4)
 
 > Proyek pengembangan aplikasi untuk **Trunodjoyo Creative Competition 2026 — Vibe Code**.
-> Platform digital yang menghubungkan **penghasil limbah** dan **pencari bahan baku** dalam satu ekosistem — siapa pun bisa mengubah sampahnya menjadi sumber daya bagi orang lain.
+> Platform digital yang menghubungkan **penghasil limbah** dan **pencari bahan baku** dalam satu ekosistem — siapa pun bisa mengubah sampahnya menjadi sumber daya bagi orang lain di sekitarnya.
 
 ---
 
@@ -27,7 +27,6 @@
 16. [Deployment](#deployment)
 17. [Roadmap](#roadmap)
 18. [Dokumentasi Terkait](#dokumentasi-terkait)
-19. [Lisensi](#lisensi)
 
 ---
 
@@ -39,7 +38,7 @@
 
 - **Satu jenis akun untuk semua user.** Tidak ada role terpisah "penjual" dan "pembeli". Siapa pun yang login bisa meng-upload limbah **dan** mencari bahan — peran ditentukan oleh tindakan, bukan tipe akun.
 - **AI membantu, manusia yang memutuskan.** Foto limbah diklasifikasikan otomatis oleh model computer vision, tetapi user selalu bisa mengoreksi hasilnya — terutama saat confidence AI rendah.
-- **Matching berbasis aturan, bukan tebak-tebakan.** Skor kecocokan dihitung dari tabel eksplisit `kategori_kecocokan`, jarak Haversine, dan volume — bukan sentence embedding. Alasannya transparan dan bisa dijelaskan.
+- **Matching berbasis aturan, bukan tebak-tebakan.** Skor kecocokan dihitung dari tabel eksplisit `kategori_kecocokan`, jarak Haversine, dan volume — bukan sentence embedding. Alasannya transparan dan bisa dijelaskan ke juri.
 
 > ⚠️ **Status project:** Fase 0–5 selesai (setup → database → AI/ML → backend → frontend → E2E testing). Fase 6 (deployment) dan Fase 7 (persiapan demo) belum dikerjakan. Detail progres: [`PROGRESS.md`](PROGRESS.md).
 
@@ -59,7 +58,7 @@
 - **Edit & hapus** — hanya untuk listing berstatus `tersedia`.
 
 ### Flow Cari Bahan
-- **Form pencarian** — kategori kebutuhan (6 opsi + free-text), slider radius 1–100 km, jumlah dibutuhkan.
+- **Form pencarian** — kategori kebutuhan (7 opsi kurasi + "Lainnya"), slider radius 1–100 km, jumlah dibutuhkan.
 - **Hasil terurut skor** — skeleton loading, sort/filter dalam drawer, empty state dengan saran.
 - **Detail listing** — galeri foto, badge status, skor AI, info pemilik, tombol klaim/lapor.
 - **Klaim** — konfirmasi → kontak pemilik langsung tampil setelah berhasil.
@@ -83,10 +82,10 @@
 ```
 ┌──────────┐    ┌─────────────────────────┐    ┌────────────────┐    ┌──────────────┐
 │  Upload  │───▶│ AI Klasifikasi Citra    │───▶│ Review &       │───▶│ Listing      │
-│  Foto    │    │ (google/vit-base → 12   │    │ Koreksi Manual │    │ Tayang       │
-│  Limbah  │    │  kelas via PEMETAAN)    │    │ + Detail       │    │ (tersedia)   │
+│  Foto    │    │ (vit-base-patch16-224 → │    │ Koreksi Manual │    │ Tayang       │
+│  Limbah  │    │ 12 kelas via PEMETAAN)  │    │ + Detail       │    │ (tersedia)   │
 └──────────┘    └─────────────────────────┘    └────────────────┘    └──────┬───────┘
-                                                                            │
+                                                                             │
 ┌──────────────┐    ┌───────────────────┐    ┌────────────────┐             │
 │ Transaksi    │◀───│ Klaim             │◀───│ Skor Kecocokan │◀────────────┘
 │ Selesai/Batal│    │ (kontak pemilik)  │    │ (rule-based)   │   User lain
@@ -116,8 +115,10 @@
 | **Auth** | Supabase Auth (email/password) | Pola `@supabase/ssr` |
 | **Storage** | Supabase Storage | Bucket publik `listings` (foto listing) |
 | **Computer Vision** | HuggingFace Inference Router — `google/vit-base-patch16-224` (ImageNet-1k) + pemetaan `PEMETAAN_LABEL_IMAGENET` | 12 kategori LoopLink, threshold confidence 0.6 |
-| **Generative AI** | Gemini 1.5 Flash (alias `gemini-flash-latest`) | Ekstraksi kondisi & catatan deskripsi |
+| **Generative AI** | Gemini 1.5 Flash (alias `gemini-flash-latest`) | **Hanya** ekstraksi kondisi & catatan deskripsi — tidak dipakai untuk klasifikasi citra |
 | **Matching** | Rule-based (Haversine + tabel skor) | **Tanpa** sentence embedding |
+
+> **Riwayat keputusan AI (catatan sejarah):** rencana awal klasifikasi citra memakai `watersplash/waste-classification` (HuggingFace, 12 kelas limbah langsung). Model tersebut sudah tidak diserve provider mana pun, sehingga diganti `google/vit-base-patch16-224` (ImageNet-1k) via HuggingFace Inference Router + tabel pemetaan `PEMETAAN_LABEL_IMAGENET`. Lihat `docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md` bagian A untuk batasan yang disadari (mis. `Battery`/`Trash` tidak pernah terdeteksi otomatis).
 
 ---
 
@@ -132,7 +133,7 @@ Browser (React)
     └── API Routes Next.js (app/api)
             │
             ├── lib/ai/klasifikasi.js ────────────▶ HF Inference Router (vit-base-patch16-224 → 12 kategori)
-            ├── lib/ai/ekstraksi.js ──────────────▶ Gemini 1.5 Flash
+            ├── lib/ai/ekstraksi.js ──────────────▶ Gemini 1.5 Flash (alias gemini-flash-latest)
             ├── lib/ai/matching.js ───────────────▶ Haversine + skor rule-based
             ├── lib/supabase/server.js ───────────▶ Client sesi user (RLS aktif)
             ├── lib/supabase/admin.js ────────────▶ Client service-role (server-only)
@@ -186,7 +187,7 @@ project/
 ├── lib/
 │   ├── ai/
 │   │   ├── klasifikasi.js      # HF Router vit-base-patch16-224 + PEMETAAN_LABEL_IMAGENET
-│   │   ├── ekstraksi.js        # Gemini 1.5 Flash
+│   │   ├── ekstraksi.js        # Gemini 1.5 Flash (alias gemini-flash-latest)
 │   │   └── matching.js         # Haversine + skor rule-based
 │   ├── api/validasi-listing.js # Validasi terpusat
 │   └── supabase/
@@ -195,7 +196,7 @@ project/
 │       ├── admin.js            # Service-role (server-only!)
 │       └── proxy.js            # Middleware refresh sesi + guard route
 ├── supabase/
-│   ├── migrations/             # 11 file migration SQL
+│   ├── migrations/             # 12 file migration SQL (001–012)
 │   └── seed.sql                # Seed data demo
 ├── scripts/                    # Test & utility scripts
 │   ├── test-matching.mjs       # 20 test matching
@@ -207,18 +208,22 @@ project/
 │   ├── verify-gap-schema.mjs   # Verifikasi fix schema
 │   └── load-env.mjs            # Loader .env.local untuk node
 ├── docs/
+│   ├── sdd/                    # Dokumentasi Spec-Driven Development (Tahap 1–4/TASKS)
+│   ├── prompts/                # Prompt siap-tempel untuk opencode
 │   ├── api-endpoints.md        # Dokumentasi API + contoh curl
-│   └── migrasi-ui-kanon.md     # Catatan migrasi UI
-├── design_loop_link/           # Referensi design Figma (Vite playground)
+│   ├── migrasi-ui-kanon.md     # Catatan migrasi UI
+│   └── alur-pengetesan-manual.md  # Panduan pengetesan manual
+├── public/                     # Aset statis (logo, favicon)
 ├── proxy.js                    # Middleware Next.js (refresh sesi)
-└── .env.local.example          # Template environment variables
+├── .env.local.example          # Template environment variables
+└── .opencode/agents/           # Definisi agent opencode
 ```
 
 ---
 
 ## Database & Schema
 
-Semua migration idempotent-safe (`create if not exists`, `drop policy if exists`) — aman dijalankan ulang. Ada **11 migration**:
+Semua migration idempotent-safe (`create if not exists`, `drop policy if exists`) — aman dijalankan ulang. Ada **12 migration**:
 
 | Migration | Isi |
 |---|---|
@@ -233,6 +238,7 @@ Semua migration idempotent-safe (`create if not exists`, `drop policy if exists`
 | `009_perbaikan_visibilitas_pengklaim` | Policy SELECT agar pengklaim bisa melihat listing yang diklaim |
 | `010_perbaikan_fk_cascade` | FK anak `listings` → `ON DELETE CASCADE` |
 | `011_storage_listings` | Bucket storage publik `listings` + 4 policy |
+| `012_kategori_kecocokan_paper_kaca_check` | Baris `kategori_kecocokan` baru (`Paper` + 3 varian kaca) + CHECK `riwayat_pencarian.kategori_dicari` (7 nilai kurasi + `__lainnya__`) |
 
 ### Tabel Inti
 
@@ -245,14 +251,14 @@ Semua migration idempotent-safe (`create if not exists`, `drop policy if exists`
 **`listing_photos`** — foto listing (URL ke Supabase Storage).
 `listing_id` (FK CASCADE), `foto_url`, `urutan`.
 
-**`kategori_kecocokan`** — tabel referensi matching rule-based (bukan hasil training).
+**`kategori_kecocokan`** — tabel referensi matching rule-based (bukan hasil training), **12 baris** saat ini (7 baseline `seed.sql` + 5 dari migration 012).
 `kategori_limbah`, `kategori_kebutuhan`, `skor_dasar` (0–1). Unique per pasangan.
 
 ### Tabel Pendukung (GTM)
 
 - **`riwayat_klaim`** — log transaksi immutable; baris **hanya** dibuat lewat RPC (`status_akhir` ∈ `selesai`/`dibatalkan`).
 - **`laporan`** — pelaporan listing bermasalah; `status` ∈ `menunggu`/`ditinjau`/`selesai` (admin).
-- **`riwayat_pencarian`** + **`riwayat_pencarian_hasil`** — log pencarian dan hasilnya (ditulis via service-role).
+- **`riwayat_pencarian`** + **`riwayat_pencarian_hasil`** — log pencarian dan hasilnya (ditulis via service-role). `riwayat_pencarian.kategori_dicari` dibatasi CHECK ke 7 nilai kebutuhan kurasi + marker `__lainnya__`.
 
 ### RLS Policies (ringkasan 21 policy)
 
@@ -307,7 +313,7 @@ Semua modul AI ada di `lib/ai/`, dengan kontrak respons yang stabil untuk endpoi
 - **Timeout 10 detik** (`AbortSignal.timeout`) — tidak pernah melempar error mentah.
 - Kontrak: sukses → `{ kategori, confidence, perlu_koreksi_manual, peringkat, gagal: false }`; gagal → `{ kategori: null, confidence: 0, perlu_koreksi_manual: true, gagal: true, alasan_gagal }`.
 
-> ⚠️ **Keterbatasan model (tercatat):** ImageNet-1k tidak punya kelas baterai → `Battery` **tidak pernah** terdeteksi otomatis (selalu masuk jalur koreksi manual). `Trash` **tidak punya mapping** label ImageNet. Karena itu sebagian foto masuk `perlu_koreksi_manual: true` (label unmapped atau confidence < 0.6) dan perlu koreksi manual oleh user. 2 foto contoh di `scripts/fixtures/`.
+> ⚠️ **Keterbatasan model (tercatat):** ImageNet-1k tidak punya kelas baterai → `Battery` **tidak pernah** terdeteksi otomatis (selalu masuk jalur koreksi manual). `Trash` **tidak punya mapping** label ImageNet. Karena itu sebagian foto masuk `perlu_koreksi_manual: true` (label unmapped atau confidence < 0.6) dan perlu koreksi manual oleh user. Foto contoh ada di `scripts/fixtures/`.
 
 ### 2. Ekstraksi Teks — `lib/ai/ekstraksi.js`
 
@@ -385,7 +391,7 @@ Base URL (dev): `http://localhost:3000`. Semua response JSON; error bentuk `{ "e
 
 ## Design System
 
-Port 1:1 dari design Figma (`design_loop_link/`) — **fixed light, tanpa dark mode**.
+Design di-port 1:1 dari Figma — **fixed light, tanpa dark mode**.
 
 ### Warna (token Tailwind `loop-*`)
 
@@ -422,9 +428,11 @@ Navbar glass pill, blob + kartu float di hero, wave divider, badge live, ikon `l
 - API key HuggingFace (Read permission) — https://huggingface.co/settings/tokens
 - API key Google AI Studio (Gemini) — https://aistudio.google.com/apikey
 
-### 1. Install dependency
+### 1. Clone & install dependency
 
 ```bash
+git clone https://github.com/rofal-gg/LoopLink.git
+cd project
 npm install
 ```
 
@@ -451,12 +459,12 @@ Isi nilainya:
 **Cara A — Supabase CLI (local/remote):**
 
 ```bash
-supabase db reset        # menjalankan migration 001–011 + seed.sql berurutan
+supabase db reset        # menjalankan migration 001–012 + seed.sql berurutan
 ```
 
 **Cara B — Manual (SQL Editor di dashboard Supabase):**
 
-1. Jalankan 11 file migration dari `supabase/migrations/` secara berurutan (001 → 011) di SQL Editor.
+1. Jalankan 12 file migration dari `supabase/migrations/` secara berurutan (001 → 012) di SQL Editor.
 2. Jalankan seluruh isi `supabase/seed.sql` sekali (login sebagai role postgres / service role).
 
 ### 4. Jalankan dev server
@@ -490,7 +498,7 @@ Seed data menyediakan **6 akun** (password semua: `looplink123`), tersebar di Su
 | `dewi@looplink.demo` | Dewi Lestari | Bangkalan | Pakaian bekas |
 | `rina@looplink.demo` | Rina Kartika | Surabaya Barat | Kertas & kaca |
 
-**Data demo:** 10 listing (7 `tersedia`, 2 `dipesan`, 1 `selesai`, 1 `dibatalkan` — termasuk 1 contoh `perlu_koreksi_manual` dengan confidence 0.55), 10 foto, 2 riwayat klaim, 7 baris `kategori_kecocokan`.
+**Data demo:** 10 listing (7 `tersedia`, 2 `dipesan`, 1 `selesai`, 1 `dibatalkan` — termasuk 1 contoh `perlu_koreksi_manual` dengan confidence 0.55), 10 foto, 2 riwayat klaim, 12 baris `kategori_kecocokan` (7 baseline `seed.sql` + 5 tambahan migration 012).
 
 **Skenario demo cepat:** login `budi@looplink.demo` → upload limbah kardus → login `sari@looplink.demo` → cari "Bahan baku daur ulang kertas" radius 30 km → klaim listing kardus Budi → kontak tampil → login Budi → selesaikan transaksi.
 
@@ -510,6 +518,8 @@ Semua script berjalan dengan `node <file>` (tanpa framework tambahan). Untuk scr
 | `scripts/e2e-mobile.mjs` | E2E mobile Chrome headless (viewport 390×844) | 14 PASS |
 | `scripts/verify-gap-schema.mjs` | Verifikasi fix schema (visibilitas pengklaim + FK cascade) | 19 PASS |
 
+Panduan pengetesan manual lengkap (skenario + langkah + data yang diharapkan): [`docs/alur-pengetesan-manual.md`](docs/alur-pengetesan-manual.md).
+
 Jalankan build & lint sebelum commit:
 
 ```bash
@@ -520,11 +530,11 @@ npm run build && npm run lint
 
 ## Deployment
 
-> ⚠️ **Fase 6 belum dikerjakan** — catatan di bawah adalah rencana dari `LoopLink_TASKS.md`.
+> ⚠️ **Fase 6 belum dikerjakan** — catatan di bawah adalah rencana dari `docs/sdd/LoopLink_TASKS.md`.
 
 1. **Frontend:** deploy ke Vercel (`vercel`), pastikan build lolos.
 2. **Environment variables production:** isi kelima variabel dari `.env.local.example` di dashboard Vercel.
-3. **Database production:** jalankan migration 001–011 + `seed.sql` di project Supabase production (bukan hanya local).
+3. **Database production:** jalankan migration 001–012 + `seed.sql` di project Supabase production (bukan hanya local).
 4. **Test ulang seluruh alur** di environment production.
 5. **Logo UKM Triple-C / TCC / Jack 2026** dicantumkan di footer atau halaman about.
 6. **Performa:** cek loading di koneksi lambat (venue lomba mungkin tidak stabil).
@@ -534,7 +544,7 @@ npm run build && npm run lint
 ## Roadmap
 
 ### GTM (opsional, kalau waktu cukup)
-- Halaman verifikasi email, notifikasi, riwayat transaksi gabungan, modal laporan, tutorial/walkthrough, halaman statis (Tentang, FAQ, Syarat & Ketentuan, Kebijakan Privasi, Kontak).
+- Halaman verifikasi email, notifikasi, riwayat transaksi gabungan, tutorial/walkthrough, halaman statis (Tentang, FAQ, Syarat & Ketentuan, Kebijakan Privasi, Kontak).
 
 ### Roadmap (post-lomba / untuk presentasi)
 - **PostGIS** untuk query jarak skalabel — ganti `hitungJarakKm` manual dengan `ST_DWithin` + GiST index (komentar skalabilitas sudah tertulis di `lib/ai/matching.js` dan migration 006).
@@ -547,18 +557,17 @@ npm run build && npm run lint
 
 | File | Isi |
 |---|---|
-| [`LoopLink_Tahap1_Ide_Inisiasi.md`](LoopLink_Tahap1_Ide_Inisiasi.md) | Ide & inisiasi project |
-| [`LoopLink_Tahap2_Requirements_Spec.md`](LoopLink_Tahap2_Requirements_Spec.md) | Kebutuhan fungsional & non-fungsional |
-| [`LoopLink_Tahap3_Design_Arsitektur.md`](LoopLink_Tahap3_Design_Arsitektur.md) | Desain arsitektur, schema, kebijakan RLS, formula skor |
-| [`LoopLink_TASKS.md`](LoopLink_TASKS.md) | Rencana kerja per fase (status checklist) |
-| [`LoopLink_PROMPT.md`](LoopLink_PROMPT.md) | Prompt siap-tempel untuk opencode |
+| [`docs/sdd/LoopLink_Tahap1_Ide_Inisiasi.md`](docs/sdd/LoopLink_Tahap1_Ide_Inisiasi.md) | Ide & inisiasi project |
+| [`docs/sdd/LoopLink_Tahap2_Requirements_Spec.md`](docs/sdd/LoopLink_Tahap2_Requirements_Spec.md) | Kebutuhan fungsional & non-fungsional |
+| [`docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md`](docs/sdd/LoopLink_Tahap3_Design_Arsitektur.md) | Desain arsitektur, schema, kebijakan RLS, formula skor |
+| [`docs/sdd/LoopLink_TASKS.md`](docs/sdd/LoopLink_TASKS.md) | Rencana kerja per fase (status checklist) |
+| [`docs/prompts/LoopLink_PROMPT.md`](docs/prompts/LoopLink_PROMPT.md) | Prompt siap-tempel untuk opencode |
 | [`LoopLink_TEAM_WORKFLOW.md`](LoopLink_TEAM_WORKFLOW.md) | Alur kerja tim & delegasi agent |
 | [`PROGRESS.md`](PROGRESS.md) | Progres live lintas fase |
 | [`docs/api-endpoints.md`](docs/api-endpoints.md) | Dokumentasi API + contoh curl |
 | [`docs/migrasi-ui-kanon.md`](docs/migrasi-ui-kanon.md) | Catatan migrasi UI ke design kanon |
+| [`docs/alur-pengetesan-manual.md`](docs/alur-pengetesan-manual.md) | Panduan pengetesan manual |
 
 ---
-
-## Lisensi
 
 © 2026 LoopLink — Proyek TCC (Task Completion Course), Trunodjoyo Creative Competition 2026 — Vibe Code. Hak cipta milik tim pengembang.

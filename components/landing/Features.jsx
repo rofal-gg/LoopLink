@@ -22,7 +22,7 @@ export default function Features() {
     { FIcon: MessageCircle, title: "Kontak Langsung", desc: "Chat terenkripsi langsung ke pemilik listing, tanpa biaya." },
   ];
   return (
-    <section style={{ backgroundColor: "#F6F3EA", padding: "100px 0" }}>
+    <section id="fitur" style={{ backgroundColor: "#F6F3EA", padding: "100px 0" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
         <div
           style={{

@@ -1,45 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X, ChevronRight } from "lucide-react";
+
+/* Urutan link mengikuti urutan section di halaman landing. */
+const links = [
+  { label: "Beranda", href: "#beranda" },
+  { label: "Fitur", href: "#fitur" },
+  { label: "Dampak", href: "#dampak" },
+  { label: "Kategori", href: "#kategori" },
+  { label: "Jelajah", href: "#jelajah" },
+  { label: "Cara Kerja", href: "#cara-kerja" },
+  { label: "Bantuan", href: "#bantuan" },
+];
+
+/* Pills desktop — state hover per item; indikator dot di bawah saat aktif. */
+function NavPill({ label, href, aktif }) {
+  const isActive = aktif === href.slice(1);
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      href={href}
+      style={{
+        position: "relative",
+        padding: "6px 14px",
+        borderRadius: 9,
+        textDecoration: "none",
+        fontSize: "0.85rem",
+        fontWeight: 500,
+        color: isActive || hovered ? "#F6F3EA" : "rgba(246,243,234,0.6)",
+        background: isActive
+          ? "rgba(255,255,255,0.12)"
+          : hovered
+            ? "rgba(255,255,255,0.1)"
+            : "transparent",
+        transition: "color 0.18s, background 0.18s",
+        display: "block",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {label}
+      {isActive && (
+        <span
+          style={{
+            position: "absolute",
+            bottom: 3,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            backgroundColor: "#6bba91",
+          }}
+        />
+      )}
+    </Link>
+  );
+}
 
 /* Navbar 3 pill glass gelap — persis design reference. */
 export default function Navbar({ loggedIn = false }) {
   const [open, setOpen] = useState(false);
+  const [aktif, setAktif] = useState("beranda");
 
-  const links = [
-    { label: "Beranda", href: "#beranda" },
-    { label: "Cara Kerja", href: "#cara-kerja" },
-    { label: "Kategori Limbah", href: "#kategori" },
-    { label: "Tentang", href: "#tentang" },
-    { label: "Bantuan", href: "#bantuan" },
-  ];
+  /* Scroll-spy: section yang sedang dilewati (pita tengah viewport) menjadi aktif. */
+  useEffect(() => {
+    const els = links
+      .map((l) => document.getElementById(l.href.slice(1)))
+      .filter(Boolean);
+    if (els.length === 0) return;
 
-  const NavPill = ({ label, href }) => {
-    const [hovered, setHovered] = useState(false);
-    return (
-      <Link
-        href={href}
-        style={{
-          padding: "6px 14px",
-          borderRadius: 9,
-          textDecoration: "none",
-          fontSize: "0.85rem",
-          fontWeight: 500,
-          color: hovered ? "#F6F3EA" : "rgba(246,243,234,0.6)",
-          background: hovered ? "rgba(255,255,255,0.1)" : "transparent",
-          transition: "color 0.18s, background 0.18s",
-          display: "block",
-          whiteSpace: "nowrap",
-        }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        {label}
-      </Link>
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setAktif(entry.target.id);
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
     );
-  };
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
 
   return (
     <nav style={{ fontFamily: "var(--font-body)", position: "sticky", top: 0, zIndex: 50 }}>
@@ -102,7 +147,6 @@ export default function Navbar({ loggedIn = false }) {
               whiteSpace: "nowrap",
             }}
           >
-            LoopLink
           </span>
         </Link>
 
@@ -123,7 +167,7 @@ export default function Navbar({ loggedIn = false }) {
           }}
         >
           {links.map((l) => (
-            <NavPill key={l.label} label={l.label} href={l.href} />
+            <NavPill key={l.label} label={l.label} href={l.href} aktif={aktif} />
           ))}
         </div>
 
@@ -335,37 +379,14 @@ export default function Navbar({ loggedIn = false }) {
               gap: 2,
             }}
           >
-            {links.map((l) => (
-              <li key={l.label}>
-                <Link
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 14px",
-                    color: "rgba(246,243,234,0.75)",
-                    fontWeight: 500,
-                    fontSize: "0.95rem",
-                    textDecoration: "none",
-                    borderRadius: 10,
-                    transition: "color 0.15s, background 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#F6F3EA";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(246,243,234,0.75)";
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  {l.label}
-                  <ChevronRight size={14} strokeWidth={2} style={{ opacity: 0.4 }} />
-                </Link>
-              </li>
-            ))}
+            {links.map((l) => {
+              const isActive = aktif === l.href.slice(1);
+              return (
+                <li key={l.label}>
+                  <MobileItem label={l.label} href={l.href} isActive={isActive} onClose={() => setOpen(false)} />
+                </li>
+              );
+            })}
           </ul>
           <div style={{ display: "flex", gap: 10 }}>
             {loggedIn ? (
@@ -459,5 +480,51 @@ export default function Navbar({ loggedIn = false }) {
         }
       `}</style>
     </nav>
+  );
+}
+
+/* Item menu mobile — highlight saat section aktif. */
+function MobileItem({ label, href, isActive, onClose }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      href={href}
+      onClick={onClose}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 14px",
+        color: isActive || hovered ? "#F6F3EA" : "rgba(246,243,234,0.75)",
+        fontWeight: 500,
+        fontSize: "0.95rem",
+        textDecoration: "none",
+        borderRadius: 10,
+        background: isActive
+          ? "rgba(255,255,255,0.12)"
+          : hovered
+            ? "rgba(255,255,255,0.06)"
+            : "transparent",
+        transition: "color 0.15s, background 0.15s",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {isActive && (
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              backgroundColor: "#6bba91",
+              flexShrink: 0,
+            }}
+          />
+        )}
+        {label}
+      </span>
+      <ChevronRight size={14} strokeWidth={2} style={{ opacity: isActive ? 0.9 : 0.4 }} />
+    </Link>
   );
 }

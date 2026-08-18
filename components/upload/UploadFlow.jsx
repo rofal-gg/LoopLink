@@ -4,15 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Alert, TextArea } from "@/components/ui/Inputs";
 import { IconCamera, IconPen, IconSpark } from "@/components/icons";
-import { gabungDeskripsi } from "./constants";
+import { SATUAN_LIST, gabungDeskripsi } from "./constants";
 import AiProcessing from "./AiProcessing";
 import ReviewForm from "./ReviewForm";
 import SuksesUpload from "./SuksesUpload";
 import {
+  blobKeDataUrl,
   buatListing,
   kompresGambar,
-  panggilEkstraksi,
   panggilKlasifikasi,
+  panggilPrefill,
   uploadFotoKeStorage,
 } from "./api";
 
@@ -20,8 +21,9 @@ import {
  * Flow Upload Limbah (Task 4.3.1 - 4.3.4).
  *
  * Tahap: foto → memproses AI (gabungan) → review & koreksi → sukses.
- * Alur AI: klasifikasi citra lalu (kalau sukses) ekstraksi teks - kedua-duanya
- * ditampilkan dalam SATU state loading (AiProcessing), bukan dua spinner.
+ * Alur AI: klasifikasi citra lalu (kalau sukses) prefill isian dari Gemini -
+ * semuanya ditampilkan dalam SATU state loading (AiProcessing), bukan dua
+ * spinner. Kalau prefill gagal, alur tetap lanjut ke review manual.
  */
 export default function UploadFlow({ profile }) {
   const fileRef = useRef(null);
@@ -37,6 +39,7 @@ export default function UploadFlow({ profile }) {
   const [pesan, setPesan] = useState("");
 
   const [hasilKlasifikasi, setHasilKlasifikasi] = useState(null);
+  const [hasilPrefill, setHasilPrefill] = useState(null);
   const [hasilEkstraksi, setHasilEkstraksi] = useState(null);
   const [blobFoto, setBlobFoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -77,6 +80,7 @@ export default function UploadFlow({ profile }) {
   /** Pindah dari review kembali ke foto (foto & catatan tetap, hasil AI dibuang). */
   function kembaliKeFoto() {
     setHasilKlasifikasi(null);
+    setHasilPrefill(null);
     setHasilEkstraksi(null);
     setBlobFoto(null);
     setLangkah(0);
@@ -87,6 +91,7 @@ export default function UploadFlow({ profile }) {
     if (!file) return;
     setFileError(null);
     setRunKe((n) => n + 1);
+    setHasilPrefill(null);
     setTahap("memproses");
 
     try {
@@ -103,26 +108,30 @@ export default function UploadFlow({ profile }) {
       setHasilKlasifikasi(hasil);
 
       if (hasil.gagal) {
-        // AI gagal total → lewati ekstraksi teks (tidak bermakna tanpa kategori)
+        // AI gagal total → lewati prefill (tidak bermakna tanpa kategori)
         setLangkah(3);
         setPesan("Selesai. AI tidak yakin, kamu bisa memilih kategori manual.");
         setTahap("review");
         return;
       }
 
-      // 3) Ekstraksi teks (kalau klasifikasi sukses)
+      // 3) Prefill isian listing dari foto (kalau klasifikasi sukses)
       setLangkah(2);
-      setPesan("AI sedang menyusun deskripsi yang pas…");
-      let teks = null;
+      setPesan("AI sedang menyusun isian listing dari foto…");
+      let prefill = null;
       try {
-        teks = await panggilEkstraksi({
-          deskripsiUser: catatan,
+        const fotoB64 = await blobKeDataUrl(blob);
+        const res = await panggilPrefill({
+          fotoB64,
           kategoriCitra: hasil.kategori,
+          catatan,
         });
+        // Response selalu 200; `gagal: true` berarti isian tidak tersedia.
+        prefill = res && !res.gagal ? res : null;
       } catch {
-        teks = null; // deskripsi opsional - jangan blokir alur
+        prefill = null; // prefill opsional - jangan blokir alur upload
       }
-      setHasilEkstraksi(teks);
+      setHasilPrefill(prefill);
 
       setLangkah(3);
       setPesan("Selesai. Periksa hasil dan lengkapi detail listing.");
@@ -170,6 +179,7 @@ export default function UploadFlow({ profile }) {
     hapusPilihan();
     setCatatan("");
     setHasilKlasifikasi(null);
+    setHasilPrefill(null);
     setHasilEkstraksi(null);
     setBlobFoto(null);
     setSukses(null);
@@ -191,7 +201,7 @@ export default function UploadFlow({ profile }) {
       </h1>
       <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-loop-line">
         Ambil foto dari kamera (HP) atau pilih file (desktop). AI akan
-        mengenali jenis limbah dan membantu menyusun deskripsi.
+        mengenali jenis limbah dan mengisi otomatis isian listing dari foto.
       </p>
 
       <div className="mt-5">
@@ -272,10 +282,12 @@ export default function UploadFlow({ profile }) {
   // ── Review (hasil AI + detail form + pratinjau live) ───────────────────
   // `renderTahapReview` adalah konstanta JSX yang props-nya dievaluasi di
   // SETIAP render (termasuk saat tahap "foto" / SSR awal). Karena itu semua
-  // akses `hasilKlasifikasi.*` di bawah WAJIB null-safe — kalau `aiGagal`
-  // tidak menyertakan `!hasilKlasifikasi`, render awal akan crash membaca
-  // properti dari null (TypeError: Cannot read properties of null).
+  // akses `hasilKlasifikasi.*` / `hasilPrefill.*` di bawah WAJIB null-safe —
+  // kalau `aiGagal` tidak menyertakan `!hasilKlasifikasi`, render awal akan
+  // crash membaca properti dari null (TypeError: Cannot read properties of
+  // null). `hasilPrefill` dipakai dengan optional chaining (`?.`) + guard.
   const aiGagal = !hasilKlasifikasi || !!hasilKlasifikasi.gagal;
+  const adaPrefill = !!hasilPrefill && !hasilPrefill.gagal;
   const renderTahapReview = (
     <div>
       <h1 className="font-display text-2xl font-semibold tracking-tight text-loop-ink">
@@ -288,17 +300,23 @@ export default function UploadFlow({ profile }) {
         <ReviewForm
           key={`review-${runKe}`}
           initial={{
-            judul: "",
+            judul: hasilPrefill?.judul ?? "",
             kategori: aiGagal ? null : hasilKlasifikasi.kategori,
             kategoriDikoreksi: aiGagal,
-            deskripsi: gabungDeskripsi(hasilEkstraksi, catatan),
-            jumlah: "",
-            satuan: "kg",
-            expiredAt: "",
+            deskripsi: adaPrefill && hasilPrefill.deskripsi
+              ? hasilPrefill.deskripsi
+              : gabungDeskripsi(hasilEkstraksi, catatan),
+            jumlah:
+              hasilPrefill?.jumlah != null ? String(hasilPrefill.jumlah) : "",
+            satuan: SATUAN_LIST.includes(hasilPrefill?.satuan)
+              ? hasilPrefill.satuan
+              : "kg",
+            expiredAt: hasilPrefill?.expiredAt ?? "",
           }}
           kategoriAsli={aiGagal ? null : hasilKlasifikasi.kategori}
           confidence={aiGagal ? null : hasilKlasifikasi.confidence}
           alertInfo={aiGagal ? "gagal" : hasilKlasifikasi.perlu_koreksi_manual ? "koreksi" : null}
+          aiPrefill={adaPrefill}
           fotoUrl={previewUrl}
           lokasi={profile}
           submitLabel="Pasang Listing"

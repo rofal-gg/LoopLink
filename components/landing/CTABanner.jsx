@@ -3,15 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Upload, TrendingUp, Users } from "lucide-react";
-import { useInView } from "./shared";
+import { SourceLabel, formatAngka } from "./format";
 
-/* ─── CTA Banner ─── */
-export default function CTABanner({ loggedIn = false }) {
-  const { ref, inView } = useInView();
+/* ─── CTA Banner ───
+ * Angka anggota berasal dari data.statistik.jumlah_anggota (nyata). Kalau
+ * statistik null → teks netral tanpa klaim jumlah pengguna.
+ */
+export default function CTABanner({ loggedIn = false, data = null }) {
+  const statistik = data?.statistik ?? null;
+  const jumlahAnggota =
+    statistik?.jumlah_anggota != null ? formatAngka(statistik.jumlah_anggota) : null;
+  const labelAnggota = jumlahAnggota
+    ? `Bergabung - ${jumlahAnggota} anggota aktif`
+    : "Bergabung bersama komunitas LoopLink";
+  const labelAvatar = jumlahAnggota
+    ? `${jumlahAnggota} sudah bergabung`
+    : "Bergabung bersama komunitas LoopLink";
   return (
     <section
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#3C7A5C", padding: "80px 0", position: "relative", overflow: "hidden" }}
     >
       <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", pointerEvents: "none" }} />
@@ -45,7 +54,7 @@ export default function CTABanner({ loggedIn = false }) {
                   textTransform: "uppercase",
                 }}
               >
-                Bergabung - 21.700+ pengguna aktif
+                {labelAnggota}
               </span>
             </div>
             <h2
@@ -106,9 +115,17 @@ export default function CTABanner({ loggedIn = false }) {
                 ))}
               </div>
               <span style={{ color: "rgba(246,243,234,0.65)", fontSize: "0.82rem", fontFamily: "var(--font-mono)" }}>
-                +21.700 sudah bergabung
+                {labelAvatar}
               </span>
             </div>
+            {statistik != null && (
+              <div style={{ marginTop: 4 }}>
+                <SourceLabel
+                  tanggal={statistik.tanggal_pembaruan ?? null}
+                  color="rgba(246,243,234,0.5)"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

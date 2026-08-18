@@ -2,7 +2,7 @@
 
 **Tahap 4: Tasks / Rencana Kerja** — hasil pemecahan Tahap 1-3 (Ide, Requirements, Arsitektur) jadi daftar tugas konkret, terurut dari setup awal sampai siap demo.
 
-> Cara pakai: setiap task punya tag **[Delegasi: agent]** yang menunjukkan agent opencode mana yang mengerjakan (lihat `looplink-orchestrator.md`), dan **[Prioritas]** sesuai tingkat build dari Tahap 3 (Wajib Prototype / GTM / Roadmap). Kerjakan berurutan per fase — jangan loncat ke Fase 4 (Frontend) sebelum Fase 1-2 (Database, AI/ML) selesai, supaya kontrak data sudah pasti.
+> Cara pakai: setiap task punya tag **[Delegasi: agent]** yang menunjukkan agent opencode mana yang mengerjakan (lihat `.opencode/agents/looplink-orchestrator.md`), dan **[Prioritas]** sesuai tingkat build dari Tahap 3 (Wajib Prototype / GTM / Roadmap). Kerjakan berurutan per fase — jangan loncat ke Fase 4 (Frontend) sebelum Fase 1-2 (Database, AI/ML) selesai, supaya kontrak data sudah pasti.
 
 ---
 
@@ -14,7 +14,7 @@
 - [x] Daftar API key Gemini via Google AI Studio `[Delegasi: manual/setup]` **[Wajib]** — `GEMINI_API_KEY` sudah terisi di `.env.local`; live call terverifikasi sukses
 - [x] Siapkan file `.env.local` dengan semua key (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `HF_API_TOKEN`, `GEMINI_API_KEY`) `[Delegasi: manual/setup]` **[Wajib]** — file terisi lengkap
 - [x] Setup repo GitHub (wajib untuk pengumpulan karya sesuai ketentuan lomba) `[Delegasi: manual/setup]` **[Wajib]** — repo `rofal-gg/LoopLink` sudah aktif, branch `main` sinkron dengan `origin/main`
-- [x] Pasang 4 file agent opencode (`looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend`) di `.opencode/agent/` `[Delegasi: manual/setup]` **[Wajib]** — kelima file ada
+- [x] Pasang 4 file agent opencode (`looplink-orchestrator`, `looplink-database-supabase`, `looplink-backend-api`, `looplink-ai-ml-integration`, `design-taste-frontend`) di `.opencode/agents/` `[Delegasi: manual/setup]` **[Wajib]** — kelima file ada
 
 ---
 

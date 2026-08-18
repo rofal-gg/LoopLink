@@ -1,21 +1,33 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Quote, Star } from "lucide-react";
-import { Eyebrow, useInView } from "./shared";
+import { Quote, MessageCircle } from "lucide-react";
+import { Eyebrow } from "./shared";
+import { inisial } from "./format";
 
-/* ─── Testimonials ─── */
-export default function Testimonials() {
-  const { ref, inView } = useInView();
-  const items = [
-    { quote: "Dulu kardus bekas pabrik kami langsung dibuang. Sekarang ada yang ambil tiap dua minggu - malah dapat penghasilan tambahan.", name: "Budi Santoso", role: "Pemilik Pabrik Tekstil, Tangerang", initials: "BS", metric: "~400 kg", metricLabel: "limbah/bulan terselamatkan" },
-    { quote: "Saya cari botol PET bersih buat bahan baku tas daur ulang. LoopLink langsung tunjukkan 7 listing dalam radius 5 km dari rumah saya.", name: "Sari Dewi", role: "Pengrajin UMKM, Depok", initials: "SD", metric: "7 listing", metricLabel: "ditemukan dalam 5 km" },
-    { quote: "AI-nya akurat banget. Foto yang saya upload, langsung tahu itu limbah logam campuran - padahal saya sendiri tidak tahu kategorinya.", name: "Rizky Pratama", role: "Kontraktor Renovasi, Bekasi", initials: "RP", metric: "< 3 menit", metricLabel: "dari foto ke listing tayang" },
-  ];
+/* ─── Testimonials ───
+ * Konten dari data.testimoni (is_tampil = true, urut urutan). Kartu
+ * menampilkan kutipan, nama, peran, metrik (kalau ada), dan badge sumber.
+ * Baris "4.9/5 dari 1.200+ ulasan" diganti dengan jumlah konten nyata.
+ * Kalau tidak ada testimoni → section tetap ada dengan notice lembut
+ * (menjaga ritme wave antar section).
+ */
+
+export default function Testimonials({ testimoni = [] }) {
+  const dataT = Array.isArray(testimoni) ? testimoni : [];
+
+  const items = dataT.map((t) => ({
+    quote: t.kutipan || "",
+    name: t.nama || "Anggota",
+    role: t.peran || "",
+    initials: inisial(t.nama),
+    metric: t.metrik || "",
+    metricLabel: t.label_metrik || "",
+    sumber: t.sumber || "",
+  }));
+
   return (
     <section
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#fff", padding: "80px 0 100px" }}
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
@@ -48,20 +60,37 @@ export default function Testimonials() {
               </em>
             </h2>
           </div>
-          <div style={{ display: "flex", gap: 4 }}>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={18} fill="#E8752C" color="#E8752C" />
-            ))}
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "#8C9184", marginLeft: 8, alignSelf: "center" }}>
-              4.9 / 5 dari 1.200+ ulasan
-            </span>
+          {items.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <MessageCircle size={14} strokeWidth={2} color="#3C7A5C" />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "#8C9184" }}>
+                {items.length} konten testimoni komunitas
+              </span>
+            </div>
+          )}
+        </div>
+        {items.length === 0 ? (
+          <div
+            style={{
+              borderRadius: 16,
+              backgroundColor: "#F6F3EA",
+              border: "1px solid #DCE3D3",
+              padding: "28px 24px",
+              textAlign: "center",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.85rem",
+              color: "#8C9184",
+            }}
+          >
+            Testimoni belum tersedia.
           </div>
-        </div>
-        <div className="testi-grid">
-          {items.map((t, i) => (
-            <TestiCard key={i} {...t} delay={i * 80} inView={inView} />
-          ))}
-        </div>
+        ) : (
+          <div className="testi-grid">
+            {items.map((t, i) => (
+              <TestiCard key={i} {...t} />
+            ))}
+          </div>
+        )}
       </div>
       <style>{`
         .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
@@ -72,13 +101,14 @@ export default function Testimonials() {
   );
 }
 
-function TestiCard({ quote, name, role, initials, metric, metricLabel, delay, inView }) {
+function TestiCard({ quote, name, role, initials, metric, metricLabel, sumber }) {
   const ref = useRef(null);
   const [mousePos, setMousePos] = useState({ x: "50%", y: "50%" });
   const [hovered, setHovered] = useState(false);
 
   const onMove = (e) => {
     const el = ref.current;
+    if (!el) return;
     const { left, top, width, height } = el.getBoundingClientRect();
     const x = (e.clientX - left) / width - 0.5;
     const y = (e.clientY - top) / height - 0.5;
@@ -90,32 +120,35 @@ function TestiCard({ quote, name, role, initials, metric, metricLabel, delay, in
     });
   };
   const onLeave = () => {
-    ref.current.style.transform =
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform =
       "perspective(700px) rotateY(0) rotateX(0) translateZ(0)";
-    ref.current.style.transition = "transform 0.5s cubic-bezier(0.22,1,0.36,1)";
+    el.style.transition = "transform 0.5s cubic-bezier(0.22,1,0.36,1)";
     setHovered(false);
   };
 
+  const showMetric = Boolean(metric && metricLabel);
+
   return (
-    <div className={`reveal${inView ? " in-view" : ""}`} style={{ transitionDelay: `${delay}ms` }}>
-      <div
-        ref={ref}
-        style={{
-          backgroundColor: "#F6F3EA",
-          borderRadius: 20,
-          padding: "32px 28px",
-          border: `1px solid ${hovered ? "#3C7A5C" : "#DCE3D3"}`,
-          boxShadow: hovered ? "0 24px 56px rgba(28,43,34,0.12)" : "0 2px 8px rgba(28,43,34,0.04)",
-          transition: "border-color 0.2s, box-shadow 0.2s",
-          position: "relative",
-          overflow: "hidden",
-          cursor: "default",
-          height: "100%",
-        }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseMove={onMove}
-        onMouseLeave={onLeave}
-      >
+    <div
+      ref={ref}
+      style={{
+        backgroundColor: "#F6F3EA",
+        borderRadius: 20,
+        padding: "32px 28px",
+        border: `1px solid ${hovered ? "#3C7A5C" : "#DCE3D3"}`,
+        boxShadow: hovered ? "0 24px 56px rgba(28,43,34,0.12)" : "0 2px 8px rgba(28,43,34,0.04)",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        position: "relative",
+        overflow: "hidden",
+        cursor: "default",
+        height: "100%",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
         <div
           style={{
             position: "absolute",
@@ -150,41 +183,43 @@ function TestiCard({ quote, name, role, initials, metric, metricLabel, delay, in
         >
           &ldquo;{quote}&rdquo;
         </p>
-        <div
-          style={{
-            backgroundColor: hovered ? "#3C7A5C" : "#DCE3D3",
-            borderRadius: 12,
-            padding: "12px 16px",
-            marginBottom: 24,
-            transition: "background-color 0.25s",
-            display: "inline-flex",
-            flexDirection: "column",
-          }}
-        >
-          <span
+        {showMetric && (
+          <div
             style={{
-              fontFamily: "var(--font-mono)",
-              fontWeight: 600,
-              fontSize: "1.3rem",
-              color: hovered ? "#F6F3EA" : "#1C2B22",
-              lineHeight: 1,
-              transition: "color 0.25s",
+              backgroundColor: hovered ? "#3C7A5C" : "#DCE3D3",
+              borderRadius: 12,
+              padding: "12px 16px",
+              marginBottom: 24,
+              transition: "background-color 0.25s",
+              display: "inline-flex",
+              flexDirection: "column",
             }}
           >
-            {metric}
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.68rem",
-              color: hovered ? "rgba(246,243,234,0.75)" : "#8C9184",
-              marginTop: 3,
-              transition: "color 0.25s",
-            }}
-          >
-            {metricLabel}
-          </span>
-        </div>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                fontSize: "1.3rem",
+                color: hovered ? "#F6F3EA" : "#1C2B22",
+                lineHeight: 1,
+                transition: "color 0.25s",
+              }}
+            >
+              {metric}
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.68rem",
+                color: hovered ? "rgba(246,243,234,0.75)" : "#8C9184",
+                marginTop: 3,
+                transition: "color 0.25s",
+              }}
+            >
+              {metricLabel}
+            </span>
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
           <div
             style={{
@@ -202,12 +237,29 @@ function TestiCard({ quote, name, role, initials, metric, metricLabel, delay, in
               {initials}
             </span>
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1C2B22", margin: 0 }}>{name}</p>
-            <p style={{ color: "#8C9184", fontSize: "0.8rem", margin: 0, fontFamily: "var(--font-mono)" }}>{role}</p>
+            <p style={{ color: "#8C9184", fontSize: "0.8rem", margin: 0, fontFamily: "var(--font-mono)" }}>
+              {role || "Anggota komunitas"}
+            </p>
+            {sumber && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  marginTop: 4,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.62rem",
+                  color: "#3C7A5C",
+                  backgroundColor: "#DCE3D3",
+                  padding: "2px 8px",
+                  borderRadius: 100,
+                }}
+              >
+                Sumber: {sumber}
+              </span>
+            )}
           </div>
         </div>
       </div>
-    </div>
   );
 }

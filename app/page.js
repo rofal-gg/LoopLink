@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Landing from "@/components/landing/Landing";
+import { ambilDataLanding } from "@/lib/api/landing";
 
 export const dynamic = "force-dynamic";
 
@@ -22,5 +23,12 @@ export default async function HomePage() {
     loggedIn = false;
   }
 
-  return <Landing loggedIn={loggedIn} />;
+  // Data Landing page dari DB yang jujur (statistik via RPC, listing/foto/
+  // aktivitas/testimoni via admin client server-only). Helper `lib/api/landing`
+  // defensif: kalau satu blok gagal, blok itu diberi fallback (null/[]) dan
+  // halaman tetap render. Frontend memakai `data` untuk menampilkan angka
+  // asli + label sumber, bukan placeholder.
+  const data = await ambilDataLanding();
+
+  return <Landing loggedIn={loggedIn} data={data} />;
 }

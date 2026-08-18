@@ -48,6 +48,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Anchor scroll — offset agar judul section tidak tertutup sticky navbar */
+[id] {
+  scroll-margin-top: 88px;
+}
+
 /* Hero viewport — fallback dvh untuk mobile */
 .hero-viewport {
   min-height: 100vh;
@@ -60,12 +65,17 @@ body {
   outline-offset: 2px;
 }
 
-/* ── Scroll reveal ── */
+/* ── Scroll reveal ──
+ * Hanya dipakai oleh section/card yang latarnya SAMA dengan halaman
+ * (#F6F3EA, var(--color-loop-base)): dua efek sekaligus, fade-in + slide-up.
+ * Section latar BEDA (gelap/mist/putih/emerald) tidak memakai kelas ini,
+ * jadi kontennya tidak pernah mulai dari opacity 0. Wave divider tidak
+ * memakai .reveal sehingga tetap aman dari pergeseran transform.
+ */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 .reveal.in-view {
   opacity: 1;
@@ -239,7 +249,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1 !important;
-    transform: none !important;
+    transform: translateY(0) !important;
     transition: none !important;
   }
   .float-card-0,
