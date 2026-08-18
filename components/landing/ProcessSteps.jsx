@@ -10,11 +10,10 @@ import {
   PackageCheck,
   ArrowRight,
 } from "lucide-react";
-import { P, Eyebrow, useInView } from "./shared";
+import { P, Eyebrow } from "./shared";
 
 /* ─── Process Steps ─── */
 export default function ProcessSteps({ loggedIn = false }) {
-  const { ref, inView } = useInView();
   const [hoveredStep, setHoveredStep] = useState(null);
   const steps = [
     { SIcon: Camera, label: "Upload Foto", desc: "Ambil atau pilih foto limbahmu langsung dari perangkat." },
@@ -31,8 +30,6 @@ export default function ProcessSteps({ loggedIn = false }) {
   return (
     <section
       id="cara-kerja"
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#1C2B22", padding: "60px 0 100px" }}
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>

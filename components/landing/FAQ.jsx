@@ -3,19 +3,49 @@
 import { useState } from "react";
 import { MessageCircle, ChevronDown } from "lucide-react";
 import { P, Eyebrow, useInView } from "./shared";
+import { SourceLabel, formatAngka, formatPersen } from "./format";
 
-/* ─── FAQ ─── */
-export default function FAQ() {
+/* ─── FAQ ───
+ * Jawaban yang sebelumnya mengaku angka palsu ("akurasi 94%", "jarak
+ * rata-rata 4.8 km", "dikunci 24 jam", "default 10 km") dirapikan menjadi
+ * pernyataan netral. Satu-satunya angka yang boleh muncul di FAQ adalah
+ * data statistik nyata (via prop `statistik`) atau fakta produk ("12 kelas
+ * limbah model", "gratis").
+ */
+
+export default function FAQ({ statistik = null }) {
   const { ref, inView } = useInView();
   const [openIdx, setOpenIdx] = useState(0);
+
+  const persen = statistik ? formatPersen(statistik.rata_rata_confidence) : null;
+
   const faqs = [
     { q: "Apakah LoopLink gratis digunakan?", a: "Ya, sepenuhnya gratis untuk pengguna individu dan UMKM. Kami berencana menghadirkan paket premium dengan fitur analitik lanjutan dan prioritas tampil di masa mendatang." },
-    { q: "Bagaimana sistem klaim eksklusif bekerja?", a: "Saat kamu mengajukan klaim, listing tersebut dikunci selama 24 jam khusus untukmu. Jika serah terima tidak dikonfirmasi dalam waktu tersebut, listing otomatis kembali tersedia untuk umum." },
-    { q: "Seberapa akurat klasifikasi AI-nya?", a: "Model kami mencapai akurasi 94% pada 5 kategori utama (Organik, Plastik, Logam, Kertas, Tekstil). Kamu selalu bisa mengubah klasifikasi secara manual jika hasilnya tidak sesuai." },
-    { q: "Apa yang terjadi jika pihak lain tidak responsif?", a: "Klaim otomatis batal setelah 24 jam tanpa konfirmasi. Kamu bisa melaporkan pengguna tidak responsif - sistem kami akan menurunkan visibilitas listing mereka secara otomatis." },
-    { q: "Apakah ada batasan jarak pencarian?", a: "Tidak ada batasan maksimum. Default radius adalah 10 km, tapi kamu bisa ubah ke seluruh kota, kabupaten, atau bahkan provinsi sesuai kebutuhanmu." },
-    { q: "Bagaimana cara kerja pengiriman atau penjemputan?", a: "LoopLink tidak menyediakan jasa pengiriman - koordinasi dilakukan langsung antara pemilik dan pencari melalui chat terenkripsi. Banyak pertukaran dilakukan dengan penjemputan sendiri karena rata-rata jarak hanya 4.8 km." },
+    { q: "Bagaimana sistem klaim eksklusif bekerja?", a: "Saat kamu mengajukan klaim, listing dikunci khusus untukmu. Jika serah terima tidak dikonfirmasi dalam waktu yang ditentukan, listing otomatis kembali tersedia untuk umum." },
+    {
+      q: "Seberapa akurat klasifikasi AI-nya?",
+      a: persen
+        ? `Model memberi nilai keyakinan per foto; rata-rata keyakinan saat ini sekitar ${persen} (dari listing yang ada). Kamu selalu bisa mengoreksi kategori manual.`
+        : "Model memberi nilai keyakinan per foto. Kamu selalu bisa mengoreksi kategori manual jika hasilnya tidak sesuai.",
+    },
+    { q: "Apa yang terjadi jika pihak lain tidak responsif?", a: "Klaim otomatis batal jika tidak ada konfirmasi dalam waktu yang ditentukan. Kamu bisa melaporkan pengguna tidak responsif - sistem kami akan menurunkan visibilitas listing mereka secara otomatis." },
+    { q: "Apakah ada batasan jarak pencarian?", a: "Tidak ada batasan: semua listing tersedia tetap ditampilkan walau di luar radius jangkauan, dan ditandai jaraknya." },
+    { q: "Bagaimana cara kerja pengiriman atau penjemputan?", a: "LoopLink tidak menyediakan jasa pengiriman - koordinasi dilakukan langsung antara pemilik dan pencari melalui chat. Banyak pertukaran dilakukan dengan penjemputan sendiri." },
   ];
+
+  const miniStats = [
+    {
+      val: statistik?.jumlah_listing != null ? formatAngka(statistik.jumlah_listing) : "—",
+      label: "Listing tercatat di platform",
+    },
+    {
+      val: statistik?.jumlah_anggota != null ? formatAngka(statistik.jumlah_anggota) : "—",
+      label: "Anggota terdaftar",
+    },
+    { val: "12", label: "Kelas limbah dikenal model AI" },
+    { val: "Gratis", label: "Selalu tanpa biaya untuk individu & UMKM" },
+  ];
+
   return (
     <section
       id="bantuan"
@@ -53,14 +83,9 @@ export default function FAQ() {
             >
               <MessageCircle size={16} /> Hubungi Kami
             </a>
-            {/* mini stats */}
+            {/* mini stats — angka nyata dari data.statistik / fakta produk */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 48 }}>
-              {[
-                { val: "<2 jam", label: "Waktu respons rata-rata" },
-                { val: "97%", label: "Kepuasan pengguna" },
-                { val: "7 hari", label: "Dukungan setiap minggu" },
-                { val: "Gratis", label: "Selalu tanpa biaya" },
-              ].map((s, i) => (
+              {miniStats.map((s, i) => (
                 <div
                   key={i}
                   style={{ backgroundColor: "#fff", borderRadius: 12, padding: "16px", border: "1px solid #DCE3D3" }}
@@ -71,6 +96,9 @@ export default function FAQ() {
                   <div style={{ color: "#8C9184", fontSize: "0.78rem", lineHeight: 1.4 }}>{s.label}</div>
                 </div>
               ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 16 }}>
+              <SourceLabel tanggal={statistik?.tanggal_pembaruan ?? null} />
             </div>
           </div>
           <div className="faq-right">

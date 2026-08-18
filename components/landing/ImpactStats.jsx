@@ -1,32 +1,110 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Package,
+  Layers,
   Scale,
-  MapPinned,
   CheckSquare,
   Users,
-  Globe,
+  Sparkles,
 } from "lucide-react";
-import { Eyebrow, useInView, useCountUp } from "./shared";
+import { Eyebrow, useCountUp } from "./shared";
+import { SourceLabel } from "./format";
 
-/* ─── Impact Stats ─── */
-const statData = [
-  { SIcon: Package, raw: 12400, dec: 0, suf: "+", label: "Listing Aktif", unit: "item" },
-  { SIcon: Scale, raw: 84200, dec: 0, suf: "", label: "Kg Limbah Terselamatkan", unit: "kg" },
-  { SIcon: MapPinned, raw: 4.8, dec: 1, suf: "", label: "Rata-rata Jarak Pertukaran", unit: "km" },
-  { SIcon: CheckSquare, raw: 9300, dec: 0, suf: "+", label: "Klaim Berhasil", unit: "transaksi" },
-  { SIcon: Users, raw: 21700, dec: 0, suf: "+", label: "Pengguna Aktif", unit: "member" },
-  { SIcon: Globe, raw: 127, dec: 0, suf: "", label: "Kota Terjangkau", unit: "kota" },
-];
+/* ─── Impact Stats ───
+ * Kartu statistik ASULI dari data.statistik (hasil RPC `statistik_landing`).
+ * Kalau `statistik` null → tampilkan notice lembut, bukan angka fiktif.
+ * Section ini berlatar mist (#DCE3D3, beda dari halaman) jadi TIDAK memakai
+ * efek masuk section (fade/slide). Trigger viewport di bawah hanya untuk
+ * animasi count-up, bukan efek masuk section.
+ */
 
-export default function ImpactStats() {
-  const { ref, inView } = useInView(0.2);
+/* Trigger satu kali saat section masuk viewport — HANYA untuk animasi isi
+ * (count-up), section sendiri tidak boleh fade/slide. */
+function useViewTrigger(threshold = 0.3) {
+  const ref = useRef(null);
+  const [fired, setFired] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || fired) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setFired(true);
+          obs.disconnect();
+        }
+      },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [fired, threshold]);
+  return { ref, fired };
+}
+
+function buatKartu(s) {
+  if (!s) return [];
+  return [
+    {
+      SIcon: Package,
+      nilai: s.listing_tersedia ?? 0,
+      dec: 0,
+      kosong: s.listing_tersedia == null,
+      label: "Listing Tersedia",
+      unit: "listing aktif",
+    },
+    {
+      SIcon: Layers,
+      nilai: s.jumlah_listing ?? 0,
+      dec: 0,
+      kosong: s.jumlah_listing == null,
+      label: "Total Listing Tercatat",
+      unit: "listing",
+    },
+    {
+      SIcon: Scale,
+      nilai: s.kg_limbah_tercatat ?? 0,
+      dec: 0,
+      kosong: s.kg_limbah_tercatat == null,
+      label: "Kg Limbah Tercatat",
+      unit: "kg",
+    },
+    {
+      SIcon: CheckSquare,
+      nilai: s.klaim_selesai ?? 0,
+      dec: 0,
+      kosong: s.klaim_selesai == null,
+      label: "Klaim Selesai",
+      unit: "transaksi",
+    },
+    {
+      SIcon: Users,
+      nilai: s.jumlah_anggota ?? 0,
+      dec: 0,
+      kosong: s.jumlah_anggota == null,
+      label: "Anggota Aktif",
+      unit: "anggota",
+    },
+    {
+      SIcon: Sparkles,
+      nilai: s.rata_rata_confidence != null ? s.rata_rata_confidence * 100 : 0,
+      dec: 1,
+      kosong: s.rata_rata_confidence == null,
+      label: "Rata-rata Keyakinan AI",
+      unit: "%",
+    },
+  ];
+}
+
+export default function ImpactStats({ statistik = null }) {
+  const { ref, fired } = useViewTrigger(0.3);
+  const kartu = buatKartu(statistik);
+
   return (
     <section
+      id="dampak"
       ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#DCE3D3", padding: "48px 0 80px" }}
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
@@ -43,12 +121,32 @@ export default function ImpactStats() {
           >
             Angka yang terus tumbuh, bersama komunitas.
           </p>
+          <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+            <SourceLabel tanggal={statistik?.tanggal_pembaruan ?? null} />
+          </div>
         </div>
-        <div className="stats-grid">
-          {statData.map((s, i) => (
-            <StatCard key={i} {...s} trigger={inView} />
-          ))}
-        </div>
+        {statistik ? (
+          <div className="stats-grid">
+            {kartu.map((s, i) => (
+              <StatCard key={i} {...s} trigger={fired} />
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              borderRadius: 16,
+              backgroundColor: "#F6F3EA",
+              border: "1px solid #C8D4BF",
+              padding: "28px 24px",
+              textAlign: "center",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.85rem",
+              color: "#8C9184",
+            }}
+          >
+            Statistik belum tersedia.
+          </div>
+        )}
       </div>
       <style>{`
         .stats-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 14px; }
@@ -59,10 +157,11 @@ export default function ImpactStats() {
   );
 }
 
-function StatCard({ SIcon, raw, dec, suf, label, unit, trigger }) {
-  const count = useCountUp(raw, dec, trigger);
-  const formatted =
-    raw >= 1000
+function StatCard({ SIcon, nilai, dec, kosong, label, unit, trigger }) {
+  const count = useCountUp(kosong ? 0 : nilai, dec, trigger);
+  const formatted = kosong
+    ? "—"
+    : nilai >= 1000
       ? count.toLocaleString("id-ID", { maximumFractionDigits: dec })
       : count.toFixed(dec);
   const [hovered, setHovered] = useState(false);
@@ -117,7 +216,6 @@ function StatCard({ SIcon, raw, dec, suf, label, unit, trigger }) {
         }}
       >
         {formatted}
-        {suf}
       </div>
       <div
         style={{

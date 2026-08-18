@@ -2,17 +2,14 @@
 
 import { useState } from "react";
 import { Mail, ChevronRight, CheckCircle } from "lucide-react";
-import { P, useInView } from "./shared";
+import { P } from "./shared";
 
 /* ─── Newsletter ─── */
 export default function Newsletter() {
-  const { ref, inView } = useInView();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   return (
     <section
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#fff", padding: "80px 0" }}
     >
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>

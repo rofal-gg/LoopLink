@@ -1,39 +1,39 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Upload,
   Play,
   MapPin,
-  Award,
-  ShieldCheck,
+  Clock,
+  Sparkles,
+  Users,
   Leaf,
+  Package,
 } from "lucide-react";
 import { P, TiltCard } from "./shared";
+import { SourceLabel, formatAngka, formatWaktuRelatif, labelKategori } from "./format";
 
-/* ─── Hero ─── */
-export default function Hero({ loggedIn = false }) {
-  const cards = [
-    {
-      img: "https://images.unsplash.com/photo-1591193686104-fddba4d0e4d8?w=500&h=280&fit=crop&auto=format",
-      cat: "Plastik",
-      title: "45 kg Botol PET Bersih",
-      loc: "Cilincing, Jakarta Utara",
-      dist: "1.2 km",
-    },
-    {
-      img: "https://images.unsplash.com/photo-1507560461415-997cd00bfd45?w=500&h=280&fit=crop&auto=format",
-      cat: "Kertas",
-      title: "Kardus Bekas Pabrik ~200 kg",
-      loc: "Cakung, Jakarta Timur",
-      dist: "3.4 km",
-    },
-  ];
+/* ─── Hero ───
+ * Angka & kartu yang tampil di sini berasal dari data (statistik + featured),
+ * bukan angka mengada-ada. Kalau data kosong/null, komponen menampilkan versi
+ * netral (tanpa klaim jumlah) dan tetap menjaga keseimbangan visual.
+ */
+export default function Hero({ loggedIn = false, data = null }) {
+  const statistik = data?.statistik ?? null;
+  const featured = Array.isArray(data?.featured) ? data.featured : [];
+  const heroListings = featured.slice(0, 2);
+  // Label sumber hanya muncul kalau ada angka nyata yang ditampilkan.
+  const adaSumber = featured.length > 0 || statistik != null;
+  const jumlahTersedia =
+    statistik?.listing_tersedia != null
+      ? formatAngka(statistik.listing_tersedia)
+      : null;
+
   const trustBadges = [
-    { icon: <Award size={13} strokeWidth={2} />, label: "Terverifikasi Kemenperin" },
-    { icon: <ShieldCheck size={13} strokeWidth={2} />, label: "Data Terenkripsi" },
-    { icon: <Leaf size={13} strokeWidth={2} />, label: "Carbon Neutral 2025" },
+    { icon: <Sparkles size={13} strokeWidth={2} />, label: "Klasifikasi AI · 12 kelas limbah" },
+    { icon: <Users size={13} strokeWidth={2} />, label: "Satu akun untuk semua" },
+    { icon: <MapPin size={13} strokeWidth={2} />, label: "Pertukaran hiper-lokal" },
   ];
 
   return (
@@ -227,98 +227,40 @@ export default function Hero({ loggedIn = false }) {
           </div>
 
           <div className="hero-cards">
-            {cards.map((item, i) => (
+            {heroListings.length > 0 ? (
+              heroListings.map((item, i) => (
+                <TiltCard
+                  key={item.listing_id ?? i}
+                  intensity={8}
+                  style={{
+                    backgroundColor: "#F6F3EA",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    boxShadow: "0 12px 40px rgba(28,43,34,0.15)",
+                    marginLeft: i === 1 ? 32 : 0,
+                    marginBottom: i === 0 ? 16 : 0,
+                  }}
+                  className={`float-card-${i}`}
+                >
+                  <HeroCardInner item={item} />
+                </TiltCard>
+              ))
+            ) : (
               <TiltCard
-                key={i}
                 intensity={8}
                 style={{
                   backgroundColor: "#F6F3EA",
                   borderRadius: 16,
                   overflow: "hidden",
                   boxShadow: "0 12px 40px rgba(28,43,34,0.15)",
-                  marginLeft: i === 1 ? 32 : 0,
-                  marginBottom: i === 0 ? 16 : 0,
+                  marginBottom: 16,
                 }}
-                className={`float-card-${i}`}
+                className="float-card-0"
               >
-                <div
-                  style={{
-                    position: "relative",
-                    height: 140,
-                    backgroundColor: "#DCE3D3",
-                    overflow: "hidden",
-                  }}
-                >
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      left: 10,
-                      backgroundColor: "#E8752C",
-                      color: "#fff",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.68rem",
-                      fontWeight: 600,
-                      padding: "3px 10px",
-                      borderRadius: 100,
-                    }}
-                  >
-                    {item.cat}
-                  </span>
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      right: 10,
-                      backgroundColor: "rgba(60,122,92,0.9)",
-                      color: "#F6F3EA",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.65rem",
-                      fontWeight: 500,
-                      padding: "3px 10px",
-                      borderRadius: 100,
-                    }}
-                  >
-                    Tersedia
-                  </span>
-                </div>
-                <div style={{ padding: "14px 16px" }}>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 600,
-                      fontSize: "0.92rem",
-                      color: "#1C2B22",
-                      margin: "0 0 4px",
-                    }}
-                  >
-                    {item.title}
-                  </p>
-                  <p
-                    style={{
-                      color: "#8C9184",
-                      fontSize: "0.8rem",
-                      margin: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <MapPin size={11} strokeWidth={2} />
-                    {item.loc} -{" "}
-                    <span style={{ color: "#3C7A5C", fontWeight: 600 }}>
-                      {item.dist}
-                    </span>
-                  </p>
-                </div>
+                <HeroCardInner item={null} />
               </TiltCard>
-            ))}
-            {/* Live activity badge */}
+            )}
+            {/* Badge status dari statistik nyata */}
             <div
               style={{
                 marginTop: 16,
@@ -359,12 +301,26 @@ export default function Hero({ loggedIn = false }) {
                   fontWeight: 500,
                 }}
               >
-                <span style={{ color: "#6bba91", fontWeight: 700 }}>
-                  23 listing
-                </span>{" "}
-                baru dalam 1 jam terakhir
+                {jumlahTersedia != null ? (
+                  <>
+                    <span style={{ color: "#6bba91", fontWeight: 700 }}>
+                      {jumlahTersedia}
+                    </span>{" "}
+                    listing tersedia
+                  </>
+                ) : (
+                  "Lihat listing terbaru"
+                )}
               </span>
             </div>
+            {adaSumber && (
+              <div style={{ marginTop: 12, textAlign: "right" }}>
+                <SourceLabel
+                  tanggal={statistik?.tanggal_pembaruan ?? null}
+                  color="#8C9184"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -388,5 +344,175 @@ export default function Hero({ loggedIn = false }) {
         }
       `}</style>
     </section>
+  );
+}
+
+/* ─── Kartu hero ───
+ * `item` null → versi ilustratif NETRAL (tanpa angka/nama mengada-ada) untuk
+ * menjaga keseimbangan visual saat belum ada listing tersedia.
+ * `item` nyata → judul, kategori, jumlah+satuan, waktu relatif dari DB.
+ */
+function HeroCardInner({ item }) {
+  if (!item) {
+    return (
+      <>
+        <div
+          style={{
+            position: "relative",
+            height: 140,
+            backgroundColor: "#DCE3D3",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Upload size={34} strokeWidth={1.5} color="#3C7A5C" />
+        </div>
+        <div style={{ padding: "14px 16px" }}>
+          <p
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: "0.92rem",
+              color: "#1C2B22",
+              margin: "0 0 4px",
+            }}
+          >
+            Upload limbahmu di sini
+          </p>
+          <p
+            style={{
+              color: "#8C9184",
+              fontSize: "0.8rem",
+              margin: 0,
+            }}
+          >
+            Daftar dan jadilah listing pertama
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  const cat = labelKategori(item.kategori_citra);
+  const jumlah =
+    item.jumlah != null
+      ? `${formatAngka(item.jumlah)}${item.satuan ? ` ${item.satuan}` : ""}`
+      : "";
+  const waktu = formatWaktuRelatif(item.created_at) || "baru saja";
+
+  return (
+    <>
+      <div
+        style={{
+          position: "relative",
+          height: 140,
+          backgroundColor: "#DCE3D3",
+          overflow: "hidden",
+        }}
+      >
+        {item.foto_url ? (
+          <img
+            src={item.foto_url}
+            alt={item.judul ?? cat}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(135deg, #3C7A5C 0%, #DCE3D3 140%)",
+            }}
+          >
+            <Package size={34} strokeWidth={1.4} color="rgba(246,243,234,0.85)" />
+          </div>
+        )}
+        <span
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            backgroundColor: "#E8752C",
+            color: "#fff",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.68rem",
+            fontWeight: 600,
+            padding: "3px 10px",
+            borderRadius: 100,
+          }}
+        >
+          {cat}
+        </span>
+        <span
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            backgroundColor: "rgba(60,122,92,0.9)",
+            color: "#F6F3EA",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.65rem",
+            fontWeight: 500,
+            padding: "3px 10px",
+            borderRadius: 100,
+          }}
+        >
+          Tersedia
+        </span>
+      </div>
+      <div style={{ padding: "14px 16px" }}>
+        <p
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 600,
+            fontSize: "0.92rem",
+            color: "#1C2B22",
+            margin: "0 0 4px",
+          }}
+        >
+          {item.judul ?? "Listing tanpa judul"}
+        </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          {jumlah && (
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.72rem",
+                color: "#3C7A5C",
+                fontWeight: 600,
+              }}
+            >
+              {jumlah}
+            </span>
+          )}
+          <span
+            style={{
+              color: "#8C9184",
+              fontSize: "0.8rem",
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginLeft: "auto",
+            }}
+          >
+            <Clock size={11} strokeWidth={2} />
+            {waktu}
+          </span>
+        </div>
+      </div>
+    </>
   );
 }

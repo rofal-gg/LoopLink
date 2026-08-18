@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/Button";
 import { IconX } from "@/components/icons";
 import { KATEGORI_LABEL, KATEGORI_MODEL } from "@/components/upload/constants";
 
-const SORT_OPTIONS = [
+const SORT_OPTIONS_DEFAULT = [
   { nilai: "skor", label: "Paling cocok", desc: "Skor kecocokan tertinggi" },
   { nilai: "jarak", label: "Terdekat", desc: "Jarak dari lokasimu" },
   { nilai: "volume", label: "Volume terbesar", desc: "Jumlah paling banyak" },
 ];
 
 /**
- * Drawer urutkan & filter hasil pencarian.
- * Sort & filter diterapkan client-side di CariFlow; drawer ini hanya
- * mengumpulkan pilihan draft lalu "Terapkan" meneruskannya ke induk.
+ * Drawer urutkan & filter hasil katalog/pencarian.
+ * Pilihan sort DINAMIS lewat prop `sortOptions` (mode katalog tidak punya
+ * opsi "Paling cocok"; mode skor memilikinya). Sort & filter diterapkan
+ * client-side di CariFlow; drawer ini hanya mengumpulkan pilihan draft lalu
+ * "Terapkan" meneruskannya ke induk.
  * Mobile: panel dari bawah. Desktop: panel dari samping kanan.
  */
 export default function DrawerSortFilter({
@@ -23,6 +25,7 @@ export default function DrawerSortFilter({
   onClose,
   sort = "skor",
   onSortChange,
+  sortOptions = SORT_OPTIONS_DEFAULT,
   filter = [],
   onFilterChange,
   onReset,
@@ -69,8 +72,7 @@ export default function DrawerSortFilter({
   }
 
   function reset() {
-    onSortChange("skor");
-    onFilterChange([]);
+    onReset();
     onClose();
   }
 
@@ -126,7 +128,7 @@ export default function DrawerSortFilter({
               aria-label="Urutkan hasil"
               className="mt-3 grid gap-2"
             >
-              {SORT_OPTIONS.map((opt) => {
+              {sortOptions.map((opt) => {
                 const aktif = sortDraft === opt.nilai;
                 return (
                   <button

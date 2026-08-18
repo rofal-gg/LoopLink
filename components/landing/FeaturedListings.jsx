@@ -5,30 +5,47 @@ import Link from "next/link";
 import {
   ArrowRight,
   Filter,
-  MapPin,
+  Tag,
   Layers,
   Clock,
+  Package,
 } from "lucide-react";
 import { Eyebrow, TiltCard, useInView } from "./shared";
+import {
+  SourceLabel,
+  labelKategori,
+  formatAngka,
+  formatWaktuRelatif,
+} from "./format";
 
-/* ─── Featured Listings ─── */
-export default function FeaturedListings() {
+/* ─── Featured Listings ───
+ * Listing dari data.featured (status 'tersedia', terbaru dulu, max 6).
+ * Semua field (foto, kategori, judul, jumlah+satuan, waktu) nyata dari DB.
+ * Pilihan filter berasal dari data.kategori. Tidak ada lokasi/dist fiktif —
+ * area meta menampilkan kategori + waktu relatif.
+ */
+
+export default function FeaturedListings({ featured = [], kategori = [] }) {
   const { ref, inView } = useInView();
-  const [filterActive, setFilterActive] = useState("Semua");
-  const filters = ["Semua", "Plastik", "Kertas", "Logam", "Organik", "Tekstil"];
-  const listings = [
-    { img: "https://images.unsplash.com/photo-1591193686104-fddba4d0e4d8?w=600&h=400&fit=crop&auto=format", cat: "Plastik", title: "Botol PET Bersih 45 kg", loc: "Cilincing, Jak-Ut", dist: "1.2 km", weight: "45 kg", age: "2 jam lalu" },
-    { img: "https://images.unsplash.com/photo-1507560461415-997cd00bfd45?w=600&h=400&fit=crop&auto=format", cat: "Kertas", title: "Kardus Pabrik ~200 kg", loc: "Cakung, Jak-Tim", dist: "3.4 km", weight: "200 kg", age: "5 jam lalu" },
-    { img: "https://images.unsplash.com/photo-1548373220-9a83eb96cdd7?w=600&h=400&fit=crop&auto=format", cat: "Logam", title: "Pipa PVC Sisa Proyek", loc: "Bekasi Barat", dist: "6.1 km", weight: "80 kg", age: "1 hari lalu" },
-    { img: "https://images.unsplash.com/photo-1587733761376-3f26fc81d17f?w=600&h=400&fit=crop&auto=format", cat: "Organik", title: "Sisa Daun Kering 30 kg", loc: "Depok Tengah", dist: "8.7 km", weight: "30 kg", age: "3 jam lalu" },
-    { img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format", cat: "Tekstil", title: "Kain Perca Warna 15 kg", loc: "Tangerang Sel.", dist: "4.2 km", weight: "15 kg", age: "6 jam lalu" },
-    { img: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=600&h=400&fit=crop&auto=format", cat: "Logam", title: "Besi Tua Campur 120 kg", loc: "Cikarang", dist: "11.3 km", weight: "120 kg", age: "8 jam lalu" },
+  const dataList = Array.isArray(featured) ? featured : [];
+  const dataKategori = Array.isArray(kategori) ? kategori : [];
+
+  const filterOptions = [
+    "Semua",
+    ...dataKategori
+      .map((k) => labelKategori(k.kategori_citra))
+      .filter((label, idx, arr) => label && arr.indexOf(label) === idx),
   ];
+  const [filterActive, setFilterActive] = useState("Semua");
+
   const filtered =
-    filterActive === "Semua" ? listings : listings.filter((l) => l.cat === filterActive);
+    filterActive === "Semua"
+      ? dataList
+      : dataList.filter((l) => labelKategori(l.kategori_citra) === filterActive);
 
   return (
     <section
+      id="jelajah"
       ref={ref}
       className={`reveal${inView ? " in-view" : ""}`}
       style={{ backgroundColor: "#F6F3EA", padding: "60px 0 100px" }}
@@ -59,79 +76,174 @@ export default function FeaturedListings() {
               Sedang Dicari <em style={{ fontStyle: "italic", fontWeight: 400 }}>di Sekitarmu</em>
             </h2>
           </div>
-          <Link
-            href="/cari"
-            style={{
-              color: "#3C7A5C",
-              fontWeight: 600,
-              fontSize: "0.88rem",
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              transition: "opacity 0.15s, transform 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = "0.7";
-              e.currentTarget.style.transform = "translateX(4px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = "1";
-              e.currentTarget.style.transform = "translateX(0)";
-            }}
-          >
-            Lihat Semua <ArrowRight size={15} />
-          </Link>
-        </div>
-        {/* Filter pills */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
-          <span
-            style={{
-              color: "#8C9184",
-              fontSize: "0.8rem",
-              fontFamily: "var(--font-mono)",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <Filter size={12} /> Filter:
-          </span>
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilterActive(f)}
+          {dataList.length > 0 && (
+            <Link
+              href="/cari"
               style={{
-                padding: "6px 14px",
-                borderRadius: 100,
-                border: `1.5px solid ${filterActive === f ? "#3C7A5C" : "#DCE3D3"}`,
-                backgroundColor: filterActive === f ? "#3C7A5C" : "transparent",
-                color: filterActive === f ? "#F6F3EA" : "#8C9184",
-                fontFamily: "var(--font-mono)",
-                fontSize: "0.72rem",
+                color: "#3C7A5C",
                 fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.18s",
+                fontSize: "0.88rem",
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                transition: "opacity 0.15s, transform 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = "0.7";
+                e.currentTarget.style.transform = "translateX(4px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = "1";
+                e.currentTarget.style.transform = "translateX(0)";
               }}
             >
-              {f}
-            </button>
-          ))}
+              Lihat Semua <ArrowRight size={15} />
+            </Link>
+          )}
         </div>
-        <div className="listings-grid">
-          {filtered.map((item, i) => (
-            <ListingCard key={i} {...item} />
-          ))}
-        </div>
-        <div className="listings-scroll-wrap">
-          <div className="listings-scroll">
-            {filtered.map((item, i) => (
-              <div key={i} className="listing-card">
-                <ListingCard {...item} />
-              </div>
-            ))}
+
+        {dataList.length === 0 ? (
+          <div
+            style={{
+              borderRadius: 16,
+              backgroundColor: "#fff",
+              border: "1px solid #DCE3D3",
+              padding: "36px 28px",
+              textAlign: "center",
+            }}
+          >
+            <Package size={28} strokeWidth={1.6} color="#8C9184" style={{ margin: "0 auto 12px" }} />
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                fontSize: "1.1rem",
+                color: "#1C2B22",
+                margin: "0 0 6px",
+              }}
+            >
+              Belum ada listing aktif
+            </p>
+            <p style={{ color: "#8C9184", fontSize: "0.9rem", margin: "0 0 20px" }}>
+              Jadilah yang pertama mengunggah limbahmu.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link
+                className="btn-primary"
+                href="/upload"
+                style={{ ...P.base, padding: "12px 24px", fontSize: "0.9rem" }}
+                onMouseEnter={(e) => P.on(e.currentTarget)}
+                onMouseLeave={(e) => P.off(e.currentTarget)}
+              >
+                Upload Limbah <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/cari"
+                style={{
+                  backgroundColor: "transparent",
+                  color: "#3C7A5C",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  borderRadius: 10,
+                  border: "2px solid #3C7A5C",
+                  cursor: "pointer",
+                  padding: "12px 24px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                  transition: "background-color 0.18s, transform 0.18s",
+                  fontFamily: "var(--font-body)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#DCE3D3";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                Cari Bahan
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Filter pills */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
+              <span
+                style={{
+                  color: "#8C9184",
+                  fontSize: "0.8rem",
+                  fontFamily: "var(--font-mono)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <Filter size={12} /> Filter:
+              </span>
+              {filterOptions.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilterActive(f)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 100,
+                    border: `1.5px solid ${filterActive === f ? "#3C7A5C" : "#DCE3D3"}`,
+                    backgroundColor: filterActive === f ? "#3C7A5C" : "transparent",
+                    color: filterActive === f ? "#F6F3EA" : "#8C9184",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.18s",
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            {filtered.length === 0 ? (
+              <div
+                style={{
+                  borderRadius: 16,
+                  backgroundColor: "#fff",
+                  border: "1px solid #DCE3D3",
+                  padding: "28px 24px",
+                  textAlign: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.85rem",
+                  color: "#8C9184",
+                }}
+              >
+                Tidak ada listing untuk kategori ini saat ini.
+              </div>
+            ) : (
+              <div className="listings-grid">
+                {filtered.map((item) => (
+                  <ListingCard key={item.listing_id} item={item} />
+                ))}
+              </div>
+            )}
+            <div className="listings-scroll-wrap">
+              <div className="listings-scroll">
+                {filtered.map((item) => (
+                  <div key={item.listing_id} className="listing-card">
+                    <ListingCard item={item} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 28, justifyContent: "flex-end" }}>
+              <SourceLabel prefix="Sumber: listing tersedia LoopLink" />
+            </div>
+          </>
+        )}
       </div>
       <style>{`
         .listings-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
@@ -144,8 +256,12 @@ export default function FeaturedListings() {
   );
 }
 
-function ListingCard({ img, cat, title, loc, dist, weight, age }) {
+function ListingCard({ item }) {
   const [hovered, setHovered] = useState(false);
+  const cat = labelKategori(item.kategori_citra);
+  const weight = `${formatAngka(item.jumlah)} ${item.satuan ?? ""}`.trim();
+  const age = formatWaktuRelatif(item.created_at);
+
   return (
     <TiltCard
       intensity={6}
@@ -164,17 +280,32 @@ function ListingCard({ img, cat, title, loc, dist, weight, age }) {
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{ position: "relative", height: 180, backgroundColor: "#DCE3D3", overflow: "hidden" }}>
-        <img
-          src={img}
-          alt={title}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: hovered ? "scale(1.06)" : "scale(1)",
-            transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
-          }}
-        />
+        {item.foto_url ? (
+          <img
+            src={item.foto_url}
+            alt={item.judul || cat}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transform: hovered ? "scale(1.06)" : "scale(1)",
+              transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(135deg, #3C7A5C 0%, #DCE3D3 140%)",
+            }}
+          >
+            <Package size={40} strokeWidth={1.4} color="rgba(246,243,234,0.85)" />
+          </div>
+        )}
         <div
           style={{
             position: "absolute",
@@ -184,22 +315,6 @@ function ListingCard({ img, cat, title, loc, dist, weight, age }) {
             transition: "opacity 0.3s",
           }}
         />
-        <span
-          style={{
-            position: "absolute",
-            top: 10,
-            left: 10,
-            backgroundColor: "#E8752C",
-            color: "#fff",
-            fontFamily: "var(--font-mono)",
-            fontSize: "0.68rem",
-            fontWeight: 600,
-            padding: "3px 10px",
-            borderRadius: 100,
-          }}
-        >
-          {cat}
-        </span>
         <span
           style={{
             position: "absolute",
@@ -229,18 +344,17 @@ function ListingCard({ img, cat, title, loc, dist, weight, age }) {
           }}
         >
           <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "0.9rem", color: "#F6F3EA", margin: 0 }}>
-            {title}
+            {item.judul}
           </p>
         </div>
       </div>
       <div style={{ padding: 16 }}>
-        <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.92rem", color: "#1C2B22", margin: "0 0 8px" }}>
-          {title}
+        <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.92rem", color: "#1C2B22", margin: "0 0 10px" }}>
+          {item.judul}
         </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={{ color: "#8C9184", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 4 }}>
-            <MapPin size={11} strokeWidth={2} />
-            {loc}
+            <Tag size={11} strokeWidth={2} /> {cat}
           </span>
           <span
             style={{
@@ -253,7 +367,7 @@ function ListingCard({ img, cat, title, loc, dist, weight, age }) {
               borderRadius: 100,
             }}
           >
-            {dist}
+            {age || "baru saja"}
           </span>
         </div>
         <div
@@ -267,9 +381,6 @@ function ListingCard({ img, cat, title, loc, dist, weight, age }) {
         >
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "#8C9184", display: "flex", alignItems: "center", gap: 4 }}>
             <Layers size={10} strokeWidth={2} /> {weight}
-          </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "#8C9184", display: "flex", alignItems: "center", gap: 4 }}>
-            <Clock size={10} strokeWidth={2} /> {age}
           </span>
         </div>
       </div>

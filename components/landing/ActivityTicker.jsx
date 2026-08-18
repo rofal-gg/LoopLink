@@ -1,25 +1,39 @@
 "use client";
 
-import {
-  Upload,
-  CheckCircle,
-  Flame,
-  Bell,
-} from "lucide-react";
+import { Upload, CheckCircle } from "lucide-react";
+import { formatWaktuRelatif, formatJumlah } from "./format";
 
-/* ─── Activity Ticker ─── */
-export default function ActivityTicker() {
-  const activities = [
-    { icon: <Upload size={11} strokeWidth={2.5} />, text: "Agus W. upload 80 kg besi tua - Bekasi", time: "2 mnt lalu" },
-    { icon: <CheckCircle size={11} strokeWidth={2.5} />, text: "Klaim berhasil - 45 kg PET - Cilincing", time: "5 mnt lalu" },
-    { icon: <Flame size={11} strokeWidth={2.5} />, text: "12 pencari aktif mencari kardus saat ini", time: "Live" },
-    { icon: <Upload size={11} strokeWidth={2.5} />, text: "Rina S. upload sisa kain perca 30 kg - Tangerang", time: "8 mnt lalu" },
-    { icon: <CheckCircle size={11} strokeWidth={2.5} />, text: "Pertukaran selesai - 200 kg kardus - Cakung", time: "12 mnt lalu" },
-    { icon: <Bell size={11} strokeWidth={2.5} />, text: "Listing baru: Botol kaca 60 kg - Bogor", time: "15 mnt lalu" },
-    { icon: <Flame size={11} strokeWidth={2.5} />, text: "7 klaim aktif dalam 5 km radius Jakarta", time: "Live" },
-    { icon: <Upload size={11} strokeWidth={2.5} />, text: "Hendra P. upload limbah elektronik - Depok", time: "19 mnt lalu" },
-  ];
-  const doubled = [...activities, ...activities];
+/* ─── Activity Ticker ───
+ * Feed aktivitas nyata dari data.aktivitas (max 8, terbaru dulu).
+ * Label "AKTIVITAS" dipakai (bukan "LIVE FEED") supaya tidak overclaim.
+ * Kalau tidak ada aktivitas → satu item statis yang jujur, tanpa feed
+ * kosong berulang.
+ */
+
+export default function ActivityTicker({ aktivitas = [] }) {
+  const dataAkt = Array.isArray(aktivitas) ? aktivitas : [];
+
+  const items =
+    dataAkt.length > 0
+      ? dataAkt.map((a) => {
+          const jumlah = formatJumlah(a);
+          const isKlaim = a.tipe === "klaim";
+          const text = isKlaim
+            ? `Klaim selesai: ${a.judul || "listing"}${jumlah}`
+            : `${a.nama || "Anggota"} upload ${a.judul || "listing"}${jumlah}`;
+          return {
+            icon: isKlaim ? (
+              <CheckCircle size={11} strokeWidth={2.5} />
+            ) : (
+              <Upload size={11} strokeWidth={2.5} />
+            ),
+            text,
+            time: formatWaktuRelatif(a.waktu),
+          };
+        })
+      : null;
+
+  const doubled = items ? [...items, ...items] : null;
 
   return (
     <div
@@ -60,33 +74,52 @@ export default function ActivityTicker() {
               whiteSpace: "nowrap",
             }}
           >
-            LIVE FEED
+            AKTIVITAS
           </span>
         </div>
         <div style={{ overflow: "hidden", flex: 1, display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", animation: "ticker 40s linear infinite", gap: 0 }}>
-            {doubled.map((a, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "12px 28px",
-                  borderRight: "1px solid rgba(255,255,255,0.04)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ color: "#6bba91" }}>{a.icon}</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "#DCE3D3" }}>
-                  {a.text}
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "#8C9184", marginLeft: 4 }}>
-                  {a.time}
-                </span>
-              </div>
-            ))}
-          </div>
+          {doubled ? (
+            <div style={{ display: "flex", animation: "ticker 40s linear infinite", gap: 0 }}>
+              {doubled.map((a, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "12px 28px",
+                    borderRight: "1px solid rgba(255,255,255,0.04)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span style={{ color: "#6bba91" }}>{a.icon}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "#DCE3D3" }}>
+                    {a.text}
+                  </span>
+                  {a.time && (
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "#8C9184", marginLeft: 4 }}>
+                      {a.time}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "12px 28px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <Upload size={11} strokeWidth={2.5} color="#6bba91" />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "#DCE3D3" }}>
+                Belum ada aktivitas baru - jadilah yang pertama berbagi limbah.
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

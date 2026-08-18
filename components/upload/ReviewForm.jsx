@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Alert, TextArea, TextInput } from "@/components/ui/Inputs";
-import { IconAlert, IconMapPin, IconPen } from "@/components/icons";
+import { IconAlert, IconMapPin, IconPen, IconSpark } from "@/components/icons";
 import { KATEGORI_LABEL, SATUAN_LIST, formatPersen } from "./constants";
 import KategoriPicker from "./KategoriPicker";
 import ListingPreview from "./ListingPreview";
@@ -24,6 +24,9 @@ import ListingPreview from "./ListingPreview";
  *                    perubahan dari nilai ini menandakan "dikoreksi manual"
  *   confidence    - confidence hasil AI (0..1) atau null
  *   alertInfo     - "gagal" | "koreksi" | null
+ *   aiPrefill     - (opsional) true kalau isian form diisi otomatis AI dari
+ *                    foto (diisi UploadFlow; EditFlow tidak mengirim, jadi
+ *                    default false dan badge "terisi AI" tidak tampil)
  *   fotoUrl       - URL pratinjau foto
  *   lokasi        - profil lokasi ({ alamat_teks, lokasi_lat, lokasi_lng }) | null
  *   submitLabel   - label tombol submit
@@ -36,6 +39,7 @@ export default function ReviewForm({
   kategoriAsli = null,
   confidence = null,
   alertInfo = null,
+  aiPrefill = false,
   fotoUrl = null,
   lokasi = null,
   submitLabel = "Pasang Listing",
@@ -189,6 +193,18 @@ export default function ReviewForm({
             >
               Detail listing
             </h2>
+            {aiPrefill ? (
+              <p
+                role="status"
+                className="mt-2 flex items-start gap-2 rounded-xl border border-loop-primary/30 bg-loop-primary/5 px-3 py-2.5 text-sm leading-relaxed text-loop-primary-hover"
+              >
+                <IconSpark className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  AI mengisi otomatis dari foto, koreksi &amp; tambahkan yang
+                  kurang.
+                </span>
+              </p>
+            ) : null}
             <div className="mt-4 space-y-4">
               <TextInput
                 label="Judul"

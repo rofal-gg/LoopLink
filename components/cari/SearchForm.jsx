@@ -10,14 +10,16 @@ const SELECT_BASE =
   "w-full rounded-xl border border-loop-mist bg-loop-base px-3.5 py-2.5 text-sm text-loop-ink shadow-sm outline-none transition focus:border-loop-primary focus:ring-4 focus:ring-loop-primary/15 disabled:opacity-60";
 
 /**
- * Form pencarian bahan: dropdown kategori kebutuhan (6 opsi exact-match
- * dari tabel kategori_kecocokan + pilihan "Lainnya"), slider radius,
- * dan input jumlah dibutuhkan.
+ * Form pencarian bahan cocok (mode skor): dropdown kategori kebutuhan
+ * (7 opsi exact-match dari tabel kategori_kecocokan + pilihan "Lainnya"),
+ * slider radius jangkauan, dan input jumlah dibutuhkan. Mengirim
+ * POST /api/listings/cari yang TIDAK memotong hasil di luar radius
+ * (ditandai `di_luar_jangkauan` di kartu hasil).
  *
  * Props:
  *   adaLokasi        - profil punya koordinat? (false => pencarian ditolak)
  *   radiusKm         - nilai slider saat ini (controlled dari induk)
- *   onRadiusChange   - dipanggil saat slider digeser (induk memicu pencarian)
+ *   onRadiusChange   - dipanggil saat slider digeser (tanpa auto-cari)
  *   jumlah           - nilai input jumlah (string)
  *   onJumlahChange   - dipanggil saat input jumlah berubah
  *   kategori         - nilai kategori efektif yang dikirim ke API
@@ -91,6 +93,19 @@ export default function SearchForm({
       noValidate
       className="rounded-2xl border border-loop-mist bg-white p-5 shadow-sm sm:p-7"
     >
+      {/* Penjelasan mode skor */}
+      <div className="mb-5 rounded-xl border border-loop-primary/20 bg-loop-primary/5 px-4 py-3">
+        <p className="flex items-center gap-2 text-sm font-semibold text-loop-ink">
+          <IconSearch className="h-4 w-4 text-loop-primary" />
+          Cari bahan cocok (berdasarkan skor)
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-loop-line">
+          Hasil diurutkan dari skor kecocokan tertinggi (kategori, jarak,
+          volume). Semua listing tetap ditampilkan; yang di luar radius
+          jangkauan diberi tanda &ldquo;Di luar jangkauan&rdquo;.
+        </p>
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         {/* Kategori kebutuhan */}
         <div className="md:col-span-2">
@@ -127,14 +142,14 @@ export default function SearchForm({
                   value={manualKategori}
                   onChange={(e) => gantiManual(e.target.value)}
                   error={errors.kategori}
-                  hint="Dicocokkan persis dengan aturan kecocokan. Hasil bisa kosong kalau pasangannya belum ada."
+                  hint="Dicocokkan dengan aturan kecocokan. Semua listing tetap ditampilkan, urutan mengikuti skor."
                   disabled={!adaLokasi}
                 />
               </div>
             ) : (
               <p className="hidden items-end pb-2.5 text-xs leading-relaxed text-loop-line lg:flex">
-                Hasil disaring dari daftar kebutuhan yang sudah terdaftar di
-                LoopLink.
+                Hasil mencakup semua listing tersedia; urutan memakai skor
+                kecocokan dengan kebutuhanmu.
               </p>
             )}
           </div>
@@ -152,7 +167,7 @@ export default function SearchForm({
               htmlFor="radius-cari"
               className="block text-sm font-semibold text-loop-ink"
             >
-              Radius pencarian
+              Radius jangkauan
             </label>
             <span className="font-mono text-sm font-semibold tabular-nums text-loop-primary">
               {radiusKm} km
@@ -167,7 +182,7 @@ export default function SearchForm({
             value={radiusKm}
             onChange={(e) => onRadiusChange(Number(e.target.value))}
             disabled={!adaLokasi}
-            aria-label="Radius pencarian dalam kilometer"
+            aria-label="Radius jangkauan dalam kilometer (tidak memotong hasil)"
             className="range-loop mt-3"
             style={{ "--fill": `${pctFill}%` }}
           />
@@ -175,6 +190,10 @@ export default function SearchForm({
             <span>1 km</span>
             <span>100 km</span>
           </div>
+          <p className="mt-1.5 text-xs leading-relaxed text-loop-line">
+            Radius tidak memotong hasil. Listing di luar radius tetap tampil
+            dan diberi badge &ldquo;Di luar jangkauan&rdquo;.
+          </p>
         </div>
 
         {/* Jumlah dibutuhkan */}
@@ -202,8 +221,9 @@ export default function SearchForm({
           <div className="flex items-start gap-2.5 text-sm text-amber-900">
             <IconMapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
             <p>
-              Kamu belum menyimpan lokasi. Pencarian butuh koordinatmu untuk
-              menghitung jarak dan radius.
+              Kamu belum menyimpan lokasi. Mode ini butuh koordinat untuk
+              menghitung skor jarak. Listing tetap bisa dilihat lewat tab
+              Katalog.
             </p>
           </div>
           <ButtonLink
@@ -227,7 +247,7 @@ export default function SearchForm({
           disabled={!adaLokasi}
         >
           <IconSearch className="h-4 w-4" />
-          Cari
+          Cari Bahan
         </Button>
       </div>
     </form>

@@ -5,13 +5,14 @@ import { IconCheck, IconSpark } from "@/components/icons";
 const LANGKAH = [
   "Foto dikompres & dikirim",
   "AI mengenali jenis limbah",
-  "Deskripsi disusun",
+  "Isian listing disusun AI",
 ];
 
 /**
- * Satu state loading GABUNGAN untuk proses klasifikasi citra + ekstraksi
- * teks. Tidak ada dua spinner terpisah: selama proses berlangsung layar ini
- * menutupi seluruh panel upload sampai hasil review siap.
+ * Satu state loading GABUNGAN untuk proses klasifikasi citra + prefill isian
+ * listing dari Gemini. Tidak ada dua spinner terpisah: selama proses
+ * berlangsung layar ini menutupi seluruh panel upload sampai hasil review
+ * siap.
  *
  * `langkah` = jumlah langkah yang sudah selesai (0..3).
  */
@@ -32,7 +33,7 @@ export default function AiProcessing({ langkah = 0, pesan = "" }) {
         AI sedang memproses fotomu
       </h2>
       <p className="mx-auto mt-1.5 max-w-md text-center text-sm leading-relaxed text-loop-line">
-        {pesan || "AI sedang mengenali jenis limbah & menyusun deskripsi…"}
+        {pesan || "AI sedang mengenali jenis limbah & menyusun isian listing…"}
       </p>
 
       <ol className="mx-auto mt-8 w-full max-w-sm space-y-2.5 text-left">

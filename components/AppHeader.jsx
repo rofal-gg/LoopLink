@@ -13,6 +13,7 @@ import {
 } from "@/components/icons";
 import {
   ChevronRight,
+  Globe,
   Package,
   Settings,
   ShieldCheck,
@@ -24,6 +25,14 @@ const NAV = [
   { href: "/cari", label: "Cari Bahan", icon: IconSearch },
   { href: "/upload", label: "Upload Limbah", icon: IconUpload },
 ];
+
+/**
+ * Pintu keluar ke halaman publik (landing page).
+ * Sengaja BUKAN bagian dari NAV: item ini tidak akan pernah berstatus
+ * "active" (currentPath "/" tidak terjadi di halaman aplikasi) dan diberi
+ * warna mint + pemisah supaya jelas ini jalan kembali ke luar aplikasi.
+ */
+const LANDING_LINK = { href: "/", label: "Landing" };
 
 /** Menu manajemen pribadi (Fase 4.6) - tampil di dropdown avatar. */
 const MENU_AKUN = [
@@ -80,6 +89,18 @@ export default function AppHeader({ nama = null, email = "", currentPath = "" })
           aria-label="Navigasi utama"
           className="hidden items-center gap-1 rounded-[14px] border border-white/10 bg-loop-ink/40 p-1.5 backdrop-blur-[20px] backdrop-saturate-150 shadow-[0_4px_20px_rgba(28,43,34,0.14)] md:flex"
         >
+          <Link
+            href={LANDING_LINK.href}
+            aria-label="Landing LoopLink - kembali ke halaman publik"
+            className="fr inline-flex items-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 py-2 text-sm font-medium text-loop-mint/80 transition hover:bg-white/10 hover:text-loop-mint"
+          >
+            <Globe className="h-4 w-4" />
+            {LANDING_LINK.label}
+          </Link>
+          <span
+            aria-hidden="true"
+            className="mx-1 h-5 w-px rounded-full bg-white/15"
+          />
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = currentPath === href;
             return (
@@ -139,6 +160,22 @@ export default function AppHeader({ nama = null, email = "", currentPath = "" })
                   aria-label="Navigasi menu"
                   className="flex flex-col gap-0.5 py-1.5 md:hidden"
                 >
+                  <Link
+                    href={LANDING_LINK.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-label="Landing LoopLink - kembali ke halaman publik"
+                    className="fr flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-loop-mint hover:bg-white/5"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      {LANDING_LINK.label}
+                    </span>
+                    <ChevronRight size={14} className="opacity-40" />
+                  </Link>
+                  <div
+                    aria-hidden="true"
+                    className="mx-3 my-1 border-t border-white/10"
+                  />
                   {NAV.map(({ href, label, icon: Icon }) => (
                     <Link
                       key={href}

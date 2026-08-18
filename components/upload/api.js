@@ -49,6 +49,36 @@ export async function panggilEkstraksi({ deskripsiUser = "", kategoriCitra = "" 
   return res.json();
 }
 
+/** Blob -> base64 data URL (untuk prefill Gemini dari foto terkompresi). */
+export async function blobKeDataUrl(blob) {
+  if (!(blob instanceof Blob)) {
+    throw new Error("Foto belum siap untuk diproses AI.");
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Gagal membaca foto untuk AI."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * POST /api/listings/prefill - Gemini menyusun isian listing dari foto
+ * (judul, deskripsi, jumlah, satuan, expiredAt). Response SELALU 200;
+ * kalau gagal, field `gagal` = true (jangan blokir alur upload).
+ */
+export async function panggilPrefill({ fotoB64, kategoriCitra = "", catatan = "" }) {
+  const res = await fetch("/api/listings/prefill", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fotoB64, kategoriCitra, catatan }),
+  });
+  if (!res.ok) {
+    throw new Error(await bacaError(res, "Gagal memanggil layanan AI untuk isian listing."));
+  }
+  return res.json();
+}
+
 /** POST /api/listings - buat listing (user_id diambil server dari sesi). */
 export async function buatListing(body) {
   const res = await fetch("/api/listings", {

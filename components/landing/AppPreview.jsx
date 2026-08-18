@@ -2,43 +2,61 @@
 
 import { useState } from "react";
 import { Upload, Search, CheckCircle } from "lucide-react";
-import { Eyebrow, useInView } from "./shared";
+import { Eyebrow } from "./shared";
+import { SourceLabel, formatAngka, formatPersen } from "./format";
 
-/* ─── App Preview ─── */
-export default function AppPreview() {
-  const { ref, inView } = useInView();
+/* ─── App Preview ───
+ * Ilustrasi ponsel tetap sebagai visual (bukan klaim data). Label angka
+ * yang sebelumnya palsu ("94% akurat", "<3 detik", "23 listing di 5 km",
+ * "Terkunci 24 jam") diganti dengan label jujur dari data.statistik atau
+ * deskripsi fitur netral tanpa angka.
+ */
+
+export default function AppPreview({ statistik = null }) {
+  const [activeScreen, setActiveScreen] = useState(0);
+
+  const persen = statistik != null ? formatPersen(statistik.rata_rata_confidence) : null;
+  const persenBulat =
+    statistik?.rata_rata_confidence != null
+      ? Math.round(Number(statistik.rata_rata_confidence) * 100)
+      : null;
+  const jumlahListing = statistik?.jumlah_listing ?? null;
+
   const screens = [
     { label: "Upload", icon: <Upload size={14} strokeWidth={2} /> },
     { label: "Temukan", icon: <Search size={14} strokeWidth={2} /> },
     { label: "Klaim", icon: <CheckCircle size={14} strokeWidth={2} /> },
   ];
-  const [activeScreen, setActiveScreen] = useState(0);
   const screenContent = [
     {
       img: "https://images.unsplash.com/photo-1591193686104-fddba4d0e4d8?w=400&h=600&fit=crop&auto=format",
       title: "Foto langsung dikenali",
-      subtitle: "AI mengidentifikasi dalam < 3 detik",
-      tags: ["Plastik PET", "94% keyakinan"],
+      subtitle: "AI memberi label + nilai keyakinan",
+      tags: [
+        "Plastik PET",
+        persen ? `${persen} keyakinan` : "12 kelas limbah",
+      ],
     },
     {
       img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=600&fit=crop&auto=format",
       title: "Filter radius & kategori",
-      subtitle: "23 listing ditemukan di 5 km radius",
-      tags: ["5 km radius", "Semua kategori"],
+      subtitle: "Semua listing tersedia ditampilkan; jarak ditandai",
+      tags: [
+        jumlahListing != null ? `${formatAngka(jumlahListing)} listing tercatat` : "Semua listing tercatat",
+        "Semua kategori",
+      ],
     },
     {
       img: "https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=600&fit=crop&auto=format",
-      title: "Klaim eksklusif 24 jam",
+      title: "Klaim eksklusif",
       subtitle: "Chat langsung & konfirmasi serah terima",
-      tags: ["Terkunci 24 jam", "Chat terenkripsi"],
+      tags: ["Klaim eksklusif", "Chat langsung"],
     },
   ];
   const sc = screenContent[activeScreen];
 
   return (
     <section
-      ref={ref}
-      className={`reveal${inView ? " in-view" : ""}`}
       style={{
         backgroundColor: "#1C2B22",
         padding: "80px 0 100px",
@@ -153,7 +171,7 @@ export default function AppPreview() {
               <p style={{ color: "#8C9184", fontSize: "0.85rem", margin: "0 0 16px" }}>
                 {sc.subtitle}
               </p>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {sc.tags.map((t, i) => (
                   <span
                     key={i}
@@ -173,47 +191,7 @@ export default function AppPreview() {
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              {[
-                { label: "App Store", sub: "iOS 14+" },
-                { label: "Google Play", sub: "Android 8+" },
-              ].map((btn, i) => (
-                <button
-                  key={i}
-                  style={{
-                    flex: 1,
-                    padding: "14px 20px",
-                    borderRadius: 12,
-                    border: "1.5px solid rgba(255,255,255,0.15)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "#F6F3EA",
-                    cursor: "pointer",
-                    transition: "border-color 0.2s, background 0.2s",
-                    fontFamily: "var(--font-body)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#3C7A5C";
-                    e.currentTarget.style.backgroundColor = "rgba(60,122,92,0.12)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)";
-                  }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{btn.label}</div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.65rem",
-                      color: "#8C9184",
-                      marginTop: 2,
-                    }}
-                  >
-                    {btn.sub}
-                  </div>
-                </button>
-              ))}
-            </div>
+            <SourceLabel tanggal={statistik?.tanggal_pembaruan ?? null} />
           </div>
           <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
             {/* Phone frame */}
@@ -300,23 +278,36 @@ export default function AppPreview() {
                       >
                         {sc.tags[0]}
                       </div>
-                      <div
-                        style={{
-                          marginTop: 8,
-                          backgroundColor: "rgba(60,122,92,0.4)",
-                          borderRadius: 4,
-                          height: 4,
-                        }}
-                      >
+                      {persenBulat != null ? (
                         <div
                           style={{
-                            width: "94%",
-                            height: "100%",
-                            backgroundColor: "#6bba91",
+                            marginTop: 8,
+                            backgroundColor: "rgba(60,122,92,0.4)",
                             borderRadius: 4,
+                            height: 4,
                           }}
-                        />
-                      </div>
+                        >
+                          <div
+                            style={{
+                              width: `${persenBulat}%`,
+                              height: "100%",
+                              backgroundColor: "#6bba91",
+                              borderRadius: 4,
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            marginTop: 8,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "0.65rem",
+                            color: "#6bba91",
+                          }}
+                        >
+                          12 kelas limbah
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -342,21 +333,7 @@ export default function AppPreview() {
                     fontWeight: 700,
                   }}
                 >
-                  94% akurat
-                </div>
-                <div style={{ display: "flex", marginTop: 4 }}>
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        backgroundColor: i < 4 ? "#3C7A5C" : "#DCE3D3",
-                        marginRight: 2,
-                      }}
-                    />
-                  ))}
+                  {persen ? `${persen} rata-rata keyakinan AI` : "AI terlatih pada 12 kelas limbah"}
                 </div>
               </div>
             </div>
