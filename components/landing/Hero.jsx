@@ -336,8 +336,8 @@ export default function Hero({ loggedIn = false, data = null }) {
         </div>
       </div>
       <style>{`
-        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 48px 0 100px; }
-        .hero-partner-logos { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 54px; margin-top: 72px; }
+        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 24px 0 32px; }
+        .hero-partner-logos { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 54px; margin-top: 32px; }
         .hero-partner-logos img { height: 75px; width: auto; object-fit: contain; opacity: 1; filter: none; transition: filter 0.2s ease, opacity 0.2s ease; }
         .hero-partner-logos img.hero-partner-tall { height: 96px; }
         .hero-partner-logos img:hover { filter: brightness(1.06); }
@@ -347,8 +347,9 @@ export default function Hero({ loggedIn = false, data = null }) {
         .hero-blob-mobile { display: none; }
         @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
         @media (max-width: 767px) {
-          .hero-grid { grid-template-columns: 1fr; gap: 32px; padding: 36px 0 60px; }
-          .hero-partner-logos { gap: 33px; margin-top: 54px; }
+          .hero-viewport { min-height: calc(100vh - 150px); min-height: calc(100dvh - 150px); }
+          .hero-grid { grid-template-columns: 1fr; gap: 32px; padding: 20px 0 32px; }
+          .hero-partner-logos { gap: 33px; margin-top: 28px; }
           .hero-partner-logos img { height: 51px; }
           .hero-partner-logos img.hero-partner-tall { height: 60px; }
           .hero-blob-1, .hero-blob-2 { display: none; }
@@ -358,7 +359,7 @@ export default function Hero({ loggedIn = false, data = null }) {
           .float-card-0, .float-card-1 { margin-left: 0 !important; }
         }
         @media (min-width: 768px) and (max-width: 1023px) {
-          .hero-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 44px 0 80px; }
+          .hero-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 20px 0 32px; }
         }
       `}</style>
     </section>

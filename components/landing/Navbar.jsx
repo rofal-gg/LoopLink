@@ -113,8 +113,8 @@ export default function Navbar({ loggedIn = false }) {
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             border: "1px solid rgba(107,186,145,0.2)",
-            borderRadius: 14,
-            padding: "8px 14px",
+            borderRadius: 10,
+            padding: "6px",
             boxShadow: "0 4px 20px rgba(28,43,34,0.18), inset 0 1px 0 rgba(255,255,255,0.07)",
             transition: "background 0.2s, box-shadow 0.2s",
           }}
@@ -133,21 +133,8 @@ export default function Navbar({ loggedIn = false }) {
             src="/logo.svg"
             alt=""
             aria-hidden="true"
-            width={40}
-            height={40}
-            style={{ display: "block", flexShrink: 0 }}
+            className="nav-mark"
           />
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              color: "#F6F3EA",
-              fontSize: "1.05rem",
-              letterSpacing: "-0.01em",
-              whiteSpace: "nowrap",
-            }}
-          >
-          </span>
         </Link>
 
         {/* PILL 2 — Nav links (desktop only) */}
@@ -458,6 +445,13 @@ export default function Navbar({ loggedIn = false }) {
       </div>
 
       <style>{`
+        .nav-mark {
+          height: 36px;
+          width: auto;
+          object-fit: contain;
+          display: block;
+          flex-shrink: 0;
+        }
         .lg-logo-img {
           height: 36px;
           opacity: 1;
@@ -470,6 +464,10 @@ export default function Navbar({ loggedIn = false }) {
         @media (min-width: 1024px) and (max-width: 1280px) {
           .lg-logos { padding: 5px 6px !important; gap: 6px !important; }
           .lg-logo-img { height: 28px; }
+          .nav-mark { height: 28px; }
+        }
+        @media (max-width: 1023px) {
+          .nav-mark { height: 30px; }
         }
         @media (min-width: 1024px) {
           .lg-nav { display: flex !important; }

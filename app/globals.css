@@ -53,10 +53,12 @@ body {
   scroll-margin-top: 88px;
 }
 
-/* Hero viewport — fallback dvh untuk mobile */
+/* Hero viewport — tinggi dikurangi dari 100dvh supaya strip AKTIVITAS
+   (ActivityTicker, ±40px) ikut terlihat di layar pertama.
+   Fallback 100vh untuk browser lama yang belum mendukung dvh. */
 .hero-viewport {
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: calc(100vh - 130px);
+  min-height: calc(100dvh - 130px);
 }
 
 /* Focus ring khas LoopLink — konsisten untuk tombol & tautan interaktif */
