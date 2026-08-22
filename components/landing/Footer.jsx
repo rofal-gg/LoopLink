@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { Leaf, Mail, MapPin } from "lucide-react";
-import { Mark } from "./shared";
+
+/* Mark dimensi landscape 2.75:1 — pakai height tetap, width auto supaya natural */
+const FOOTER_MARK_STYLE = `
+  .footer-mark { height: 42px; width: auto; object-fit: contain; }
+  @media (max-width: 767px) { .footer-mark { height: 36px; } }
+`;
 
 /* ─── Footer ─── */
 export default function Footer() {
@@ -31,11 +36,8 @@ export default function Footer() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
         <div className="footer-grid">
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <Mark />
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "#F6F3EA", fontSize: "1.15rem" }}>
-                LoopLink
-              </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <img src="/logo.svg" className="footer-mark" alt="LoopLink" />
             </div>
             <p style={{ color: "#8C9184", fontSize: "0.85rem", lineHeight: 1.75, marginBottom: 24 }}>
               Menghubungkan limbah dengan peluang, di radius terdekatmu.
@@ -194,6 +196,7 @@ export default function Footer() {
         </div>
       </div>
       <style>{`
+        ${FOOTER_MARK_STYLE}
         .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; }
         @media (max-width: 767px) { .footer-grid { grid-template-columns: 1fr; gap: 32px; } }
         @media (min-width: 768px) and (max-width: 1023px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; } }
