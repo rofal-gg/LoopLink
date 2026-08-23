@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import Logo from "@/components/brand/Logo";
 import {
   IconHome,
   IconLogOut,
@@ -73,15 +72,15 @@ export default function AppHeader({ nama = null, email = "", currentPath = "" })
   const initial = (nama || email || "?").trim().charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40">
+    <>
+      <style>{`.app-mark { height: 40px; width: auto; object-fit: contain; }`}</style>
+      <header className="sticky top-0 z-40">
       <div className="mx-auto flex w-full max-w-[1380px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
         {/* Pill 1 — Logo */}
         <div className={GLASS_PILL}>
-          <Logo
-            href="/home"
-            textClassName="text-loop-base"
-            markClassName="h-10 w-10"
-          />
+          <a href="/home" className="flex items-center">
+            <img src="/logo.svg" className="app-mark" alt="LoopLink" />
+          </a>
         </div>
 
         {/* Pill 2 — Nav desktop */}
@@ -242,5 +241,6 @@ export default function AppHeader({ nama = null, email = "", currentPath = "" })
         </div>
       </div>
     </header>
+    </>
   );
 }

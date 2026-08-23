@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle, X, ArrowUpRight } from "lucide-react";
-import { P, Eyebrow, Mark, useInView } from "./shared";
+import { P, Eyebrow, useInView } from "./shared";
 
 /* ─── Comparison / Why LoopLink ─── */
 export default function WhyLoopLink() {
@@ -17,7 +17,9 @@ export default function WhyLoopLink() {
     { feature: "Komunitas & komunitas aktif", looplink: true, traditional: false, pengepul: false },
   ];
   return (
-    <section
+    <>
+      <style>{`.why-mark { height: 40px; width: auto; object-fit: contain; }`}</style>
+      <section
       id="tentang"
       ref={ref}
       className={`reveal${inView ? " in-view" : ""}`}
@@ -59,12 +61,7 @@ export default function WhyLoopLink() {
                   Fitur
                 </th>
                 <th style={{ padding: "16px 20px", textAlign: "center", borderBottom: "1px solid #DCE3D3" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-                    <Mark size={32} />
-                    <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "#1C2B22", fontSize: "0.95rem" }}>
-                      LoopLink
-                    </span>
-                  </div>
+                  <img src="/logo.svg" className="why-mark" alt="LoopLink" />
                 </th>
                 <th
                   style={{
@@ -163,5 +160,6 @@ export default function WhyLoopLink() {
         </div>
       </div>
     </section>
+    </>
   );
 }

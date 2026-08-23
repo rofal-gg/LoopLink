@@ -7,7 +7,7 @@
 
 ## Status Saat Ini
 
-**Fase aktif: Fase 5 — Integrasi & Testing End-to-End ✅ SELESAI** — 7 skenario wajib di TASKS.md lolos (31 PASS E2E API + 14 PASS mobile). Dua script test baru: `scripts/e2e-fase5.mjs` (S1–S6) & `scripts/e2e-mobile.mjs` (S7, Chrome headless 390×844). Tidak ditemukan bug aplikasi. Detail di bawah.
+**Fase aktif: Fase 6 — Deployment & Persiapan Demo** — Logo partner & wordmark LoopLink sudah dibersihkan dari semua halaman (Navbar, Footer, Auth, WhyLoopLink, AppHeader). Semua halaman sekarang hanya tampilkan logo mark tanpa teks. Menunggu: commit, deploy Vercel, env production, migration/seed production, test ulang.
 
 > ✅ **Fase 1 (Database & Supabase) SELESAI** — 10 migration + seed ter-apply, RLS aktif, 3 RPC terverifikasi, 2 gap schema (visibilitas pengklaim + FK cascade) sudah diperbaiki. **+1 migration bonus**: `202608140011_storage_listings.sql` (bucket storage publik `listings` + 4 policy, prasyarat 4.3).
 > ✅ **Fase 2 (AI/ML Integration) SELESAI** — 3 modul `lib/ai/` + test script; kontrak fungsi siap.
@@ -172,6 +172,30 @@
 - ✅ **Logo brand LoopLink di pill kiri navbar** — beberapa iterasi atas arahan user: mark `/logo.svg` diperbesar (40→60→80→100px persegi), wordmark "LoopLink" sempat hilang di commit/merge lalu dikembalikan, kemudian sesuai user teks **dihilangkan** (pill kiri sekarang hanya logo), padding pill dirapatkan (`2px`, radius 8). **Akar masalah ditemukan:** `logo.svg` punya whitespace internal besar (root 1407×768 landscape, konten tergambar hanya 1083×394) sehingga logo selalu tampak kecil. Perbaikan (opsi user B): **`logo.svg` di-trim** — `viewBox="157 197 1083 394"`, width/height jadi `1083×394` (rasio 2.75:1) — dampak global: semua pemakaian `/logo.svg` (brand `Logo`/`Mark`, footer) kini menampilkan logo lebih besar/wajar. Pill navbar memakai `width={231} height={84}` (rasio pas), pill ≈ 237×90px. Catatan: `logo.svg` adalah aset bersama — komponen lain yang butuh ukuran lama tinggal sesuaikan width/height lokal (bukan edit SVG lagi).
 - ✅ **Riwayat iterasi ukuran (semua atas arahan user):** hero 40/52px → 50/64px (+25%) → 75/96px (+50%); navbar 26→36px (seukuran auth).
 - ✅ **Verifikasi:** lint `Navbar.jsx` & `Hero.jsx` **0 error** (warning `no-img-element` pra-ada & konsisten dengan konvensi file yang memakai `<img>` polos); hanya kedua file tersebut yang modified di working tree (git status: `M components/landing/Navbar.jsx`, `M components/landing/Hero.jsx`).
+
+### Fase 6 (lanjutan) — Cleanup Logo & Wordmark LoopLink ✅
+
+> 23 Agu — user meminta semua halaman yang masih menampilkan teks "LoopLink" di samping logo agar teksnya dihapus dan logonya diperbesar. Dikerjakan oleh `design-taste-frontend`.
+
+- ✅ **Navbar (`Navbar.jsx`)** — wordmark "LoopLink" sudah dihapus sebelumnya (hanya mark `<img src="/logo.svg">`); logo pakai CSS class `.nav-mark` dengan `height: 36px` (28px di 1024–1280px), landscape natural.
+- ✅ **Footer (`Footer.jsx`)** — wordmark "LoopLink" dihapus; hanya `<img src="/logo.svg" className="footer-mark">` yang tampil; CSS `.footer-mark { height: 42px; width: auto; object-fit: contain; }` (36px mobile).
+- ✅ **Auth (`AuthShell.jsx`)** — wordmark "LoopLink" dihapus; `<img src="/logo.svg" className="auth-mark" alt="LoopLink" />`; CSS `.auth-mark { height: 48px; width: auto; object-fit: contain; }`.
+- ✅ **WhyLoopLink.jsx (tabel perbandingan)** — `<Mark size={32} />` + teks "LoopLink" diganti `<img src="/logo.svg" className="why-mark" alt="LoopLink" />`; logo diperbesar ke `height: 40px`; import `Mark` dihapus dari import.
+- ✅ **AppHeader.jsx (header internal app)** — `<Logo>` component (yang otomatis tampilkan wordmark) diganti `<img src="/logo.svg" className="app-mark" alt="LoopLink" />` + link ke `/home`; logo `height: 40px`; import `Logo` dihapus.
+- ✅ **Pendekatan konsisten** — semua tempat pakai pola CSS class dengan `height` tetap + `width: auto` → logo tampil landscape natural, bukan kotak persegi dengan ruang kosong. Tidak ada komponen `Logo.jsx`/`Mark.jsx` yang diubah (tetap tersedia untuk pemakaian lain).
+- ✅ **Verifikasi:** lint 0 error (2 warning `no-img-element` sudah ada sebelumnya); hanya 2 file berubah di sesi terakhir: `WhyLoopLink.jsx` + `AppHeader.jsx`.
+
+### Ringkasan Status Logo per Halaman
+
+| Halaman | Logo | Teks "LoopLink" | Ukuran |
+|---|---|---|---|
+| Navbar | `<img>` via `.nav-mark` | ❌ Dihapus | 36px (28px narrow) |
+| Hero | Band partner logos | ❌ Tidak ada teks | 75/96px desktop, 51/60px mobile |
+| Footer | `<img>` via `.footer-mark` | ❌ Dihapus | 42px (36px mobile) |
+| Auth | `<img>` via `.auth-mark` | ❌ Dihapus | 48px |
+| WhyLoopLink | `<img>` via `.why-mark` | ❌ Dihapus | 40px |
+| AppHeader | `<img>` via `.app-mark` | ❌ Dihapus | 40px |
+
 - ⚠️ **Belum (lanjutan Fase 6):** commit aset + perubahan, deploy frontend ke Vercel, env production, migration/seed production, test ulang alur production, verifikasi HF live dari jaringan produksi.
 
 ### Fase 2 — sisa verifikasi live (opsional, tidak menahan fase berikutnya)
@@ -186,7 +210,7 @@
 
 ### Fase 6 — Deployment — BERIKUTNYA
 
-Fase 5 (Integrasi & Testing End-to-End) **selesai** — 31 PASS E2E API + 14 PASS mobile, tanpa bug aplikasi, checklist TASKS.md Fase 5 sudah ter-centang. Lanjutkan ke **Fase 6**: deploy frontend ke Vercel, pasang env production, jalankan migration & seed di production, test ulang alur di production, logo UKM Triple-C/TCC/Jack 2026, cek performa koneksi lambat. Sisa opsional: verifikasi klasifikasi HuggingFace live dari jaringan lain (blocker DNS dev — hitung juga efeknya di production, karena HF dipanggil dari server & production berada di jaringan berbeda).
+Fase 5 (Integrasi & Testing End-to-End) **selesai** — 31 PASS E2E API + 14 PASS mobile, tanpa bug aplikasi, checklist TASKS.md Fase 5 sudah ter-centang. **Fase 6 (lanjutan):** Logo partner & wordmark LoopLink sudah dibersihkan dari semua halaman. **Sisa Fase 6:** commit aset + perubahan, deploy frontend ke Vercel, pasang env production, jalankan migration & seed di production, test ulang alur di production, verifikasi HF live dari jaringan produksi.
 
 ### Prasyarat untuk Fase 4.6 onward
 
