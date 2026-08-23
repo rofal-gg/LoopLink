@@ -5,18 +5,21 @@
 //   node scripts/test-klasifikasi.mjs
 //
 // Jalur yang diuji:
-//   (1) Logika deterministik via fetch palsu — sekarang dengan label ImageNet-1k
-//       NYATA yang ada di PEMETAAN_LABEL_IMAGENET: sukses, confidence rendah
-//       (threshold 0.6), persis threshold, label TIDAK terpetakan, non-OK,
-//       fetch timeout, JSON rusak, respons objek error, array kosong —
-//       semuanya tanpa jaringan.
+//   (1) Logika deterministik via fetch palsu — mock respons HF Space
+//       `{ hasil: [...] }` dengan label lowercase 12 kelas model
+//       `watersplash/waste-classification` yang NYATA ada di LABEL_KE_KELAS:
+//       sukses, confidence rendah (threshold 0.6), persis threshold, label
+//       TIDAK terpetakan, non-OK, fetch timeout, JSON rusak, respons objek
+//       error, hasil kosong — semuanya tanpa jaringan.
 //   (2) Validasi input: undefined/null/object/string → fallback TANPA fetch.
-//   (3) Guard key kosong → fallback TANPA fetch.
+//   (3) Guard env kosong (KLASIFIKASI_API_URL / KLASIFIKASI_API_TOKEN) →
+//       fallback TANPA fetch.
 //   (4) LIVE: pakai fixture yang SUDAH ADA di scripts/fixtures/ (jangan diunduh
 //       ulang). Kalau file hilang, baru diunduh dari Wikimedia Commons sebagai
-//       fallback. Fixture yang label ImageNet-nya tidak terpetakan dicatat
-//       sebagai WARN (label asli model dicetak biar mapping bisa dievaluasi),
-//       bukan FAIL.
+//       fallback. Fixture demo (botol plastik, karton susu, kaleng, kaca,
+//       kertas) tetap valid untuk model 12 kelas baru. Label model yang tidak
+//       terpetakan dicatat sebagai WARN (label asli dicetak biar mapping bisa
+//       dievaluasi), bukan FAIL.
 // Exit code non-zero kalau ada FAIL. Tidak print API key, tidak uncaught error.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -27,19 +30,21 @@ import { muatEnvLocal } from "./load-env.mjs";
 import {
   klasifikasiCitra,
   CONFIDENCE_THRESHOLD,
-  PEMETAAN_LABEL_IMAGENET,
+  LABEL_KE_KELAS,
 } from "../lib/ai/klasifikasi.js";
 
 muatEnvLocal();
 
-const KEY_ASLI = process.env.HF_API_TOKEN || "";
+const URL_ASLI = process.env.KLASIFIKASI_API_URL || "";
+const TOKEN_ASLI = process.env.KLASIFIKASI_API_TOKEN || "";
 const FIXTURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
 const UA = "LoopLink-Test/1.0 (demo; competition)";
 
 // Sumber foto limbah publik (Wikimedia Commons) — HANYA dipakai sebagai
 // fallback kalau fixture lokal ternyata belum ada (biasanya sudah tersedia).
-// Fixture demo resmi sudah diverifikasi live terhadap model: label ImageNet
-// top-1 terpetakan ke KELAS_MODEL yang sesuai dan confidence ≥ 0.75.
+// Fixture demo resmi sudah diverifikasi live terhadap model 12 kelas
+// `watersplash/waste-classification` yang di-serve via HF Space: label top-1
+// lowercase terpetakan ke KELAS_MODEL yang sesuai dan confidence ≥ 0.75.
 const SUMBER_FOTO = [
   {
     nama: "plastic-bottles.jpg",
@@ -149,31 +154,41 @@ const responsHF = ({ ok = true, status = 200, jsonValue }) => ({
   },
 });
 
-// Pastikan key dummy ada supaya mock test sampai ke fetch (bukan guard).
-process.env.HF_API_TOKEN = "dummy-test-key";
+// Pastikan env dummy ada supaya mock test sampai ke fetch (bukan guard).
+process.env.KLASIFIKASI_API_URL = "https://dummy-test-space.hf.space";
+process.env.KLASIFIKASI_API_TOKEN = "dummy-test-key";
 
-// (1a) Sukses, confidence tinggi + label ImageNet terpetakan → tidak perlu koreksi
+// (1a) Sukses, confidence tinggi + label model terpetakan → tidak perlu koreksi
 await denganFetchPalsu(
   () =>
     responsHF({
-      jsonValue: [
-        { label: "pop bottle, soda bottle", score: 0.95 },
-        { label: "water bottle", score: 0.03 },
-        { label: "plastic bag", score: 0.02 },
-      ],
+      jsonValue: {
+        hasil: [
+          { label: "cardboard", score: 0.95 },
+          { label: "paper", score: 0.03 },
+          { label: "metal", score: 0.02 },
+        ],
+      },
     }),
   async () => {
-    const r = await klasifikasiCitra(Buffer.from("foto-plastik"));
+    const r = await klasifikasiCitra(Buffer.from("foto-karton"));
     cek(
-      validasiShape(r) && !r.gagal && r.kategori === "Plastic" && r.confidence === 0.95 &&
+      validasiShape(r) && !r.gagal && r.kategori === "Cardboard" && r.confidence === 0.95 &&
         r.perlu_koreksi_manual === false,
       "klasifikasi sukses, confidence tinggi",
       `kategori=${r.kategori}, confidence=${r.confidence}`
     );
     cek(
       Array.isArray(r.peringkat) && r.peringkat.length === 3 &&
-        r.peringkat[0].label === "pop bottle, soda bottle",
+        r.peringkat[0].label === "cardboard",
       "peringkat berisi semua label",
+      ""
+    );
+    cek(
+      panggilanFetch.length === 1 &&
+        panggilanFetch[0][1]?.headers?.["X-API-KEY"] === "dummy-test-key" &&
+        panggilanFetch[0][1]?.headers?.["Content-Type"] === "application/octet-stream",
+      "fetch memakai header X-API-KEY + octet-stream",
       ""
     );
   }
@@ -181,11 +196,11 @@ await denganFetchPalsu(
 
 // (1b) Confidence di bawah 0.6 → perlu_koreksi_manual true (label tetap terpetakan)
 await denganFetchPalsu(
-  () => responsHF({ jsonValue: [{ label: "carton", score: 0.4 }] }),
+  () => responsHF({ jsonValue: { hasil: [{ label: "plastic", score: 0.4 }] } }),
   async () => {
     const r = await klasifikasiCitra(Buffer.from("foto-ambigu"));
     cek(
-      r.gagal === false && r.kategori === "Cardboard" && r.perlu_koreksi_manual === true,
+      r.gagal === false && r.kategori === "Plastic" && r.perlu_koreksi_manual === true,
       `confidence 0.4 < ${CONFIDENCE_THRESHOLD} → perlu koreksi manual`,
       `confidence=${r.confidence}, kategori=${r.kategori}, perlu_koreksi_manual=${r.perlu_koreksi_manual}`
     );
@@ -193,14 +208,16 @@ await denganFetchPalsu(
 );
 
 // (1c) Tepat di threshold 0.6 DENGAN label terpetakan → TIDAK perlu koreksi
-//      (konsisten dengan rule "< 0.6": 0.6 bukan < 0.6). Label yang tidak
-//      terpetakan tetap memicu koreksi manual berapa pun skornya (lihat 1i).
+//      (konsisten dengan rule "< 0.6": 0.6 bukan < 0.6). Sekaligus membuktikan
+//      bahwa Battery sekarang terdeteksi otomatis (sebelumnya via ImageNet-1k
+//      kategori Battery tidak pernah muncul). Label yang tidak terpetakan tetap
+//      memicu koreksi manual berapa pun skornya (lihat 1i).
 await denganFetchPalsu(
-  () => responsHF({ jsonValue: [{ label: "pop bottle, soda bottle", score: 0.6 }] }),
+  () => responsHF({ jsonValue: { hasil: [{ label: "battery", score: 0.6 }] } }),
   async () => {
-    const r = await klasifikasiCitra(Buffer.from("foto-plastik-tipis"));
+    const r = await klasifikasiCitra(Buffer.from("foto-baterai"));
     cek(
-      r.gagal === false && r.kategori === "Plastic" && r.perlu_koreksi_manual === false,
+      r.gagal === false && r.kategori === "Battery" && r.perlu_koreksi_manual === false,
       `confidence 0.6 (persis threshold, label terpetakan) → tidak koreksi`,
       `kategori=${r.kategori}, perlu_koreksi_manual=${r.perlu_koreksi_manual}`
     );
@@ -236,22 +253,25 @@ await denganFetchPalsu(() => responsHF({ jsonValue: new Error("bad json") }), as
   cek(r.gagal === true, "respons JSON rusak → fallback", `alasan=${r.alasan_gagal}`);
 });
 
-// (1g) HF membalas objek error (bukan array) → fallback
-await denganFetchPalsu(() => responsHF({ jsonValue: { error: "Model is currently loading" } }), async () => {
+// (1g) HF Space membalas objek error (bukan { hasil: [...] }) → fallback
+await denganFetchPalsu(
+  () => responsHF({ jsonValue: { error: "Unauthorized: X-API-KEY tidak cocok." } }),
+  async () => {
+    const r = await klasifikasiCitra(Buffer.from("x"));
+    cek(r.gagal === true, "respons objek error → fallback", `alasan=${r.alasan_gagal}`);
+  }
+);
+
+// (1h) `hasil` kosong (tidak ada prediksi) → fallback
+await denganFetchPalsu(() => responsHF({ jsonValue: { hasil: [] } }), async () => {
   const r = await klasifikasiCitra(Buffer.from("x"));
-  cek(r.gagal === true, "respons objek error → fallback", `alasan=${r.alasan_gagal}`);
+  cek(r.gagal === true, "hasil kosong → fallback", `alasan=${r.alasan_gagal}`);
 });
 
-// (1h) Array kosong → fallback
-await denganFetchPalsu(() => responsHF({ jsonValue: [] }), async () => {
-  const r = await klasifikasiCitra(Buffer.from("x"));
-  cek(r.gagal === true, "array kosong → fallback", `alasan=${r.alasan_gagal}`);
-});
-
-// (1i) Label ImageNet TIDAK ada di tabel pemetaan → kategori null + koreksi manual,
+// (1i) Label di LUAR 12 kelas model → kategori null + koreksi manual,
 //      TAPI bukan kegagalan API (gagal false). Skor tetap disimpan apa adanya.
 await denganFetchPalsu(
-  () => responsHF({ jsonValue: [{ label: "quill, quill pen", score: 0.9 }] }),
+  () => responsHF({ jsonValue: { hasil: [{ label: "quill, quill pen", score: 0.9 }] } }),
   async () => {
     const r = await klasifikasiCitra(Buffer.from("foto-lain"));
     cek(
@@ -287,27 +307,52 @@ for (const [nama, input] of [
   );
 }
 
-// (3) Guard key kosong → fallback tanpa jaringan
+// (3a) Guard token kosong → fallback tanpa jaringan
 {
-  const keySimpan = process.env.HF_API_TOKEN;
-  process.env.HF_API_TOKEN = "";
+  const urlSimpan = process.env.KLASIFIKASI_API_URL;
+  const tokenSimpan = process.env.KLASIFIKASI_API_TOKEN;
+  process.env.KLASIFIKASI_API_URL = "https://dummy-test-space.hf.space";
+  process.env.KLASIFIKASI_API_TOKEN = "";
   const r = await denganFetchPalsu(
     () => {
-      throw new Error("fetch PADA-DIPANGGIL padahal key kosong");
+      throw new Error("fetch PADA-DIPANGGIL padahal token kosong");
     },
     () => klasifikasiCitra(Buffer.from("x"))
   );
   cek(
     validasiShape(r) && r.gagal === true && panggilanFetch.length === 0,
-    "key kosong → fallback tanpa jaringan",
+    "KLASIFIKASI_API_TOKEN kosong → fallback tanpa jaringan",
     `alasan=${r.alasan_gagal}`
   );
-  process.env.HF_API_TOKEN = keySimpan;
+  process.env.KLASIFIKASI_API_URL = urlSimpan;
+  process.env.KLASIFIKASI_API_TOKEN = tokenSimpan;
+}
+
+// (3b) Guard URL kosong → fallback tanpa jaringan
+{
+  const urlSimpan = process.env.KLASIFIKASI_API_URL;
+  const tokenSimpan = process.env.KLASIFIKASI_API_TOKEN;
+  process.env.KLASIFIKASI_API_URL = "";
+  process.env.KLASIFIKASI_API_TOKEN = "dummy-test-key";
+  const r = await denganFetchPalsu(
+    () => {
+      throw new Error("fetch PADA-DIPANGGIL padahal URL kosong");
+    },
+    () => klasifikasiCitra(Buffer.from("x"))
+  );
+  cek(
+    validasiShape(r) && r.gagal === true && panggilanFetch.length === 0,
+    "KLASIFIKASI_API_URL kosong → fallback tanpa jaringan",
+    `alasan=${r.alasan_gagal}`
+  );
+  process.env.KLASIFIKASI_API_URL = urlSimpan;
+  process.env.KLASIFIKASI_API_TOKEN = tokenSimpan;
 }
 
 // (4) LIVE — pakai fixture yang sudah ada; unduh hanya kalau hilang (opsional)
-process.env.HF_API_TOKEN = KEY_ASLI;
-if (KEY_ASLI) {
+process.env.KLASIFIKASI_API_URL = URL_ASLI;
+process.env.KLASIFIKASI_API_TOKEN = TOKEN_ASLI;
+if (URL_ASLI && TOKEN_ASLI) {
   mkdirSync(FIXTURES_DIR, { recursive: true });
   let diproses = 0;
   for (const foto of SUMBER_FOTO) {
@@ -332,7 +377,7 @@ if (KEY_ASLI) {
       if (validasiShape(r) && !r.gagal) {
         const labelAsli = r.peringkat?.[0]?.label ?? "?";
         if (r.kategori === null) {
-          // Label ImageNet tidak terpetakan → WARN (bukan FAIL), per brief.
+          // Label model tidak terpetakan → WARN (bukan FAIL), per brief.
           catat(
             "WARN",
             `LIVE klasifikasi ${foto.nama} — label unmapped`,
@@ -349,7 +394,7 @@ if (KEY_ASLI) {
         catat(
           "WARN",
           `LIVE klasifikasi ${foto.nama} fallback (keterbatasan)`,
-          `alasan=${r.alasan_gagal} — cold-start HF bisa >10 detik; fallback tervalidasi`
+          `alasan=${r.alasan_gagal} — cold-start ZeroGPU bisa >10 detik; fallback tervalidasi`
         );
       }
     } catch (e) {
@@ -360,7 +405,7 @@ if (KEY_ASLI) {
     catat("WARN", "LIVE klasifikasi dilewati", "tidak ada foto yang bisa diproses (jaringan?); fallback sudah terverifikasi");
   }
 } else {
-  catat("WARN", "LIVE klasifikasi dilewati", "HF_API_TOKEN kosong di environment ini");
+  catat("WARN", "LIVE klasifikasi dilewati", "KLASIFIKASI_API_URL / KLASIFIKASI_API_TOKEN kosong di environment ini");
 }
 
 // ---------------------------------------------------------------------------
@@ -368,6 +413,6 @@ if (KEY_ASLI) {
 // ---------------------------------------------------------------------------
 console.log("\n=== HASIL TEST KLASIFIKASI ===");
 for (const r of results) console.log(r);
-console.log(`\nJumlah label di PEMETAAN_LABEL_IMAGENET: ${Object.keys(PEMETAAN_LABEL_IMAGENET).length}`);
+console.log(`\nJumlah label di LABEL_KE_KELAS: ${Object.keys(LABEL_KE_KELAS).length}`);
 console.log(`\n${passed} PASS, ${failed} FAIL, ${warned} WARN`);
 process.exit(failed > 0 ? 1 : 0);

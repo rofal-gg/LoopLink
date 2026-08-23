@@ -2,8 +2,9 @@
 //
 // POST /api/listings/klasifikasi — butuh login
 // Klasifikasi citra limbah jadi salah satu dari 12 kelas model
-// (google/vit-base-patch16-224 via HuggingFace Inference Router +
-// pemetaan label ImageNet PEMETAAN_LABEL_IMAGENET).
+// (watersplash/waste-classification via HF Space Gradio + ZeroGPU).
+// Backend memanggil POST /klasifikasi di HF Space, lalu memetakan label
+// model (lowercase) ke format KELAS_MODEL via LABEL_KE_KELAS.
 //
 // Menerima foto dalam 2 format (dukung keduanya agar mudah di-curl):
 //   1) Raw binary : Content-Type: application/octet-stream → request.arrayBuffer()
