@@ -1,0 +1,28 @@
+# LoopLink — HuggingFace Space (Gradio SDK + ZeroGPU) dependencies
+#
+# Catatan penting ZeroGPU:
+# - `gradio`, `spaces`, dan `huggingface_hub` sebenarnya sudah diinstal oleh
+#   platform (platform-managed). Baris gradio/spaces di bawah hanya batas
+#   kompatibilitas longgar — JANGAN di-pin ke versi telak (==), karena bisa
+#   konflik/zero-runtime break.
+# - ZeroGPU hanya menerima torch 2.8.0 / 2.9.1 / 2.10.0 / 2.11.0 (runtime
+#   pre-install versi terbaru yang didukung). Batas bawah `>=2.8` aman.
+# - Python resmi ZeroGPU: 3.12.12 dan 3.10.13 (lihat frontmatter README,
+#   `python_version: "3.12"`).
+
+gradio>=5.26,<7
+spaces>=0.27
+torch>=2.8,<3
+# torchvision wajib untuk AutoImageProcessor (transform ViT: resize + normalize).
+# Pasangan resmi dengan torch ZeroGPU (2.8.0-2.11.0):
+#   torch 2.8.0  -> torchvision 0.23.x
+#   torch 2.9.x  -> torchvision 0.24.x
+#   torch 2.10.x -> torchvision 0.25.x
+#   torch 2.11.x -> torchvision 0.26.x
+# pip akan memilih pasangan yang konsisten karena torchvision mendeklarasikan
+# dependensi torch yang cocok.
+torchvision>=0.23,<0.27
+transformers>=4.44,<6
+pillow>=10,<13
+fastapi>=0.110,<1
+uvicorn>=0.30,<1
