@@ -50,3 +50,4 @@ next-env.d.ts
 
 # test fixtures (foto sampel untuk uji klasifikasi — jangan commit file besar)
 /scripts/fixtures/
+model 3d

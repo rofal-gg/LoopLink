@@ -33,6 +33,16 @@
     monospace;
 }
 
+/* Alias lebih pendek untuk WebGL scene & komponen yang pakai notasi --loop-* */
+:root {
+  --loop-ink: var(--color-loop-ink);
+  --loop-base: var(--color-loop-base);
+  --loop-primary: var(--color-loop-primary);
+  --loop-signal: var(--color-loop-signal);
+  --loop-mist: var(--color-loop-mist);
+  --loop-line: var(--color-loop-line);
+}
+
 * {
   box-sizing: border-box;
 }

@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Upload,
   Play,
@@ -12,354 +14,513 @@ import {
   Package,
 } from "lucide-react";
 import { P, TiltCard } from "./shared";
-import { SourceLabel, formatAngka, formatWaktuRelatif, labelKategori } from "./format";
+import {
+  SourceLabel,
+  formatAngka,
+  formatWaktuRelatif,
+  labelKategori,
+} from "./format";
+
+/* ─── Utilitas ─── */
+function lerp(a, b, t) {
+  return a + (b - a) * Math.min(Math.max(t, 0), 1);
+}
+
+/* ─── WebGL Scene (dynamic import, tanpa SSR) ─── */
+const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
 /* ─── Hero ───
- * Angka & kartu yang tampil di sini berasal dari data (statistik + featured),
- * bukan angka mengada-ada. Kalau data kosong/null, komponen menampilkan versi
- * netral (tanpa klaim jumlah) dan tetap menjaga keseimbangan visual.
+ * Section tinggi 220vh dengan container sticky 100vh.
+ * Canvas WebGL menjadi backdrop visual menggantikan blob statis.
+ * Konten overlay (teks, kartu, logo mitra) muncul setelah scroll 6%.
+ * Fallback statis ditampilkan kalau device tanpa WebGL atau
+ * user mengaktifkan prefers-reduced-motion.
+ *
+ * Angka & kartu berasal dari data (statistik + featured).
+ * Kalau data kosong/null, komponen menampilkan versi netral.
  */
 export default function Hero({ loggedIn = false, data = null }) {
+  const sectionRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [canWebGL, setCanWebGL] = useState(true);
+
   const statistik = data?.statistik ?? null;
   const featured = Array.isArray(data?.featured) ? data.featured : [];
   const heroListings = featured.slice(0, 2);
-  // Label sumber hanya muncul kalau ada angka nyata yang ditampilkan.
   const adaSumber = featured.length > 0 || statistik != null;
   const jumlahTersedia =
     statistik?.listing_tersedia != null
       ? formatAngka(statistik.listing_tersedia)
       : null;
 
+  const showOverlay = scrollProgress > 0.06;
+
+  /* Progress 0→1 untuk animasi logo:
+   * 0   = logo besar di tengah (splash)
+   * 0.15 = logo sudah kembali ke posisi strip */
+  const logoProgress = Math.min(scrollProgress / 0.15, 1);
+
   const trustBadges = [
-    { icon: <Sparkles size={13} strokeWidth={2} />, label: "Klasifikasi AI · 12 kelas limbah" },
-    { icon: <Users size={13} strokeWidth={2} />, label: "Satu akun untuk semua" },
-    { icon: <MapPin size={13} strokeWidth={2} />, label: "Pertukaran hiper-lokal" },
+    {
+      icon: <Sparkles size={13} strokeWidth={2} />,
+      label: "Klasifikasi AI \u00b7 12 kelas limbah",
+    },
+    {
+      icon: <Users size={13} strokeWidth={2} />,
+      label: "Satu akun untuk semua",
+    },
+    {
+      icon: <MapPin size={13} strokeWidth={2} />,
+      label: "Pertukaran hiper-lokal",
+    },
   ];
+
+  useEffect(() => {
+    // Cek WebGL support & prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    const testCanvas = document.createElement("canvas");
+    const hasWebGL = !!(
+      testCanvas.getContext("webgl") ||
+      testCanvas.getContext("experimental-webgl")
+    );
+    setCanWebGL(hasWebGL && !prefersReducedMotion);
+
+    // Scroll listener: update progress 0→1
+    function onScroll() {
+      const rect = sectionRef.current?.getBoundingClientRect();
+      if (rect) {
+        const scrollable = rect.height - window.innerHeight;
+        const p = Math.min(Math.max(-rect.top / scrollable, 0), 1);
+        setScrollProgress(p);
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <section
+      ref={sectionRef}
       id="beranda"
-      className="hero-viewport"
-      style={{
-        backgroundColor: "#F6F3EA",
-        overflow: "hidden",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-      }}
+      style={{ height: "220vh", position: "relative" }}
     >
-      <div
-        className="hero-blob-1"
-        style={{
-          position: "absolute",
-          right: "-5%",
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: "55%",
-          height: "110%",
-          backgroundColor: "#3C7A5C",
-          borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-          zIndex: 0,
-        }}
-      />
-      <div
-        className="hero-blob-2"
-        style={{
-          position: "absolute",
-          right: "2%",
-          top: "55%",
-          transform: "translateY(-50%)",
-          width: "42%",
-          height: "85%",
-          backgroundColor: "#DCE3D3",
-          borderRadius: "50% 50% 30% 70% / 40% 60% 40% 60%",
-          zIndex: 1,
-        }}
-      />
-      <div
-        className="hero-blob-mobile"
-        style={{
-          position: "absolute",
-          bottom: -40,
-          left: "-10%",
-          right: "-10%",
-          height: 160,
-          backgroundColor: "#3C7A5C",
-          borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
-          zIndex: 0,
-          display: "none",
-        }}
-      />
-
+      {/* Container sticky — Canvas WebGL atau fallback statis */}
       <div
         style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "0 24px",
-          width: "100%",
-          position: "relative",
-          zIndex: 2,
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        <div
-          role="group"
-          aria-label="Logo institusi mitra"
-          className="hero-partner-logos"
-        >
-          <img src="/UTM.webp" alt="UTM" />
-          <img src="/TRIPLE-C.webp" alt="Triple C" />
-          <img src="/TCC.webp" alt="TCC" className="hero-partner-tall" />
-          <img src="/JACK%20TRIPLE-C.webp" alt="Jack" className="hero-partner-tall" />
-        </div>
+        {canWebGL ? (
+          <HeroScene sectionRef={sectionRef} />
+        ) : (
+          /* Fallback statis untuk device tanpa WebGL atau reduced-motion */
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 70% 40%, #DCE3D3 0%, #F6F3EA 60%)",
+            }}
+          />
+        )}
 
-        <div className="hero-grid">
-          <div className="hero-text">
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "#DCE3D3",
-                borderRadius: 100,
-                padding: "6px 16px",
-                marginBottom: 32,
-              }}
-            >
-              <Leaf size={12} color="#3C7A5C" strokeWidth={2.5} />
-              <span
+        {/* Konten hero — overlay di atas canvas */}
+        <div
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            padding: "0 24px",
+            width: "100%",
+            position: "relative",
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          {/* Logo mitra — animasi dari besar (splash) → strip kecil saat scroll */}
+          <div
+            role="group"
+            aria-label="Logo institusi mitra"
+            className="hero-partner-logos"
+            style={{
+              transform: `scale(${lerp(1.6, 1, logoProgress)})`,
+              marginBottom: 0,
+              marginTop: lerp(500, 80, logoProgress),
+              width: "max-content",
+              maxWidth: "90vw",
+              zIndex: 20,
+            }}
+          >
+            <img
+              src="/UTM.webp"
+              alt="UTM"
+              style={{ height: lerp(110, 75, logoProgress) }}
+            />
+            <img
+              src="/TRIPLE-C.webp"
+              alt="Triple C"
+              style={{ height: lerp(110, 75, logoProgress) }}
+            />
+            <img
+              src="/TCC.webp"
+              alt="TCC"
+              className="hero-partner-tall"
+              style={{ height: lerp(140, 96, logoProgress) }}
+            />
+            <img
+              src="/JACK%20TRIPLE-C.webp"
+              alt="Jack"
+              className="hero-partner-tall"
+              style={{ height: lerp(140, 96, logoProgress) }}
+            />
+          </div>
+
+          {/* Grid utama — fade-in setelah scroll 6% */}
+          <div
+            className={`hero-grid transition-all duration-500 ${
+              showOverlay
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-6"
+            }`}
+            style={{ width: "100%" }}
+          >
+            {/* Kolom teks */}
+            <div className="hero-text">
+              <div
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.68rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  color: "#3C7A5C",
-                  textTransform: "uppercase",
-                }}
-              >
-                EKONOMI SIRKULAR - BERDAMPAK NYATA
-              </span>
-            </div>
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 900,
-                color: "#1C2B22",
-                lineHeight: 1.02,
-                margin: "0 0 8px",
-                fontSize: "clamp(2.8rem, 6vw, 5rem)",
-              }}
-            >
-              Limbahmu,
-            </h1>
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 400,
-                fontStyle: "italic",
-                color: "#E8752C",
-                lineHeight: 1.02,
-                margin: "0 0 28px",
-                fontSize: "clamp(2.8rem, 6vw, 5rem)",
-              }}
-            >
-              Peluang Orang Lain.
-            </h1>
-            <p
-              style={{
-                color: "#8C9184",
-                fontSize: "1.08rem",
-                lineHeight: 1.78,
-                maxWidth: 420,
-                marginBottom: 44,
-              }}
-            >
-              Platform yang menghubungkan pemilik limbah dengan pencari bahan
-              alternatif di sekitar mereka. Satu akun, dua aksi - upload atau
-              cari, kapan saja.
-            </p>
-            <div className="hero-ctas">
-              <Link
-                className="btn-primary"
-                href={loggedIn ? "/upload" : "/register"}
-                style={{ ...P.base, padding: "15px 30px", fontSize: "0.95rem" }}
-                onMouseEnter={(e) => P.on(e.currentTarget)}
-                onMouseLeave={(e) => P.off(e.currentTarget)}
-              >
-                <Upload size={18} /> Upload Limbah Sekarang
-              </Link>
-              <Link
-                href="#cara-kerja"
-                style={{
-                  backgroundColor: "transparent",
-                  color: "#3C7A5C",
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  borderRadius: 10,
-                  border: "2px solid #3C7A5C",
-                  cursor: "pointer",
-                  padding: "14px 28px",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
-                  textDecoration: "none",
-                  transition: "background-color 0.18s, transform 0.18s",
-                  fontFamily: "var(--font-body)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#DCE3D3";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.transform = "translateY(0)";
+                  backgroundColor: "#DCE3D3",
+                  borderRadius: 100,
+                  padding: "6px 16px",
+                  marginBottom: 32,
                 }}
               >
-                <Play size={16} /> Lihat Cara Kerjanya
-              </Link>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 40 }}>
-              {trustBadges.map((b, i) => (
-                <div
-                  key={i}
+                <Leaf size={12} color="#3C7A5C" strokeWidth={2.5} />
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    color: "#8C9184",
-                    fontSize: "0.78rem",
                     fontFamily: "var(--font-mono)",
+                    fontSize: "0.68rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    color: "#3C7A5C",
+                    textTransform: "uppercase",
                   }}
                 >
-                  <span style={{ color: "#3C7A5C" }}>{b.icon}</span>
-                  {b.label}
-                </div>
-              ))}
-            </div>
-          </div>
+                  EKONOMI SIRKULAR - BERDAMPAK NYATA
+                </span>
+              </div>
 
-          <div className="hero-cards">
-            {heroListings.length > 0 ? (
-              heroListings.map((item, i) => (
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 900,
+                  color: "#1C2B22",
+                  lineHeight: 1.02,
+                  margin: "0 0 8px",
+                  fontSize: "clamp(2.8rem, 6vw, 5rem)",
+                }}
+              >
+                Limbahmu,
+              </h1>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 400,
+                  fontStyle: "italic",
+                  color: "#E8752C",
+                  lineHeight: 1.02,
+                  margin: "0 0 28px",
+                  fontSize: "clamp(2.8rem, 6vw, 5rem)",
+                }}
+              >
+                Peluang Orang Lain.
+              </h1>
+
+              <p
+                style={{
+                  color: "#8C9184",
+                  fontSize: "1.08rem",
+                  lineHeight: 1.78,
+                  maxWidth: 420,
+                  marginBottom: 44,
+                }}
+              >
+                Platform yang menghubungkan pemilik limbah dengan pencari bahan
+                alternatif di sekitar mereka. Satu akun, dua aksi - upload atau
+                cari, kapan saja.
+              </p>
+
+              <div className="hero-ctas">
+                <Link
+                  className="btn-primary"
+                  href={loggedIn ? "/upload" : "/register"}
+                  style={{
+                    ...P.base,
+                    padding: "15px 30px",
+                    fontSize: "0.95rem",
+                  }}
+                  onMouseEnter={(e) => P.on(e.currentTarget)}
+                  onMouseLeave={(e) => P.off(e.currentTarget)}
+                >
+                  <Upload size={18} /> Upload Limbah Sekarang
+                </Link>
+                <Link
+                  href="#cara-kerja"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "#3C7A5C",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                    borderRadius: 10,
+                    border: "2px solid #3C7A5C",
+                    cursor: "pointer",
+                    padding: "14px 28px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    textDecoration: "none",
+                    transition:
+                      "background-color 0.18s, transform 0.18s",
+                    fontFamily: "var(--font-body)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#DCE3D3";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <Play size={16} /> Lihat Cara Kerjanya
+                </Link>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                  marginTop: 40,
+                }}
+              >
+                {trustBadges.map((b, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "#8C9184",
+                      fontSize: "0.78rem",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    <span style={{ color: "#3C7A5C" }}>{b.icon}</span>
+                    {b.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Kolom kartu */}
+            <div className="hero-cards">
+              {heroListings.length > 0 ? (
+                heroListings.map((item, i) => (
+                  <TiltCard
+                    key={item.listing_id ?? i}
+                    intensity={8}
+                    style={{
+                      backgroundColor: "#F6F3EA",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      boxShadow: "0 12px 40px rgba(28,43,34,0.15)",
+                      marginLeft: i === 1 ? 32 : 0,
+                      marginBottom: i === 0 ? 16 : 0,
+                    }}
+                    className={`float-card-${i}`}
+                  >
+                    <HeroCardInner item={item} />
+                  </TiltCard>
+                ))
+              ) : (
                 <TiltCard
-                  key={item.listing_id ?? i}
                   intensity={8}
                   style={{
                     backgroundColor: "#F6F3EA",
                     borderRadius: 16,
                     overflow: "hidden",
                     boxShadow: "0 12px 40px rgba(28,43,34,0.15)",
-                    marginLeft: i === 1 ? 32 : 0,
-                    marginBottom: i === 0 ? 16 : 0,
+                    marginBottom: 16,
                   }}
-                  className={`float-card-${i}`}
+                  className="float-card-0"
                 >
-                  <HeroCardInner item={item} />
+                  <HeroCardInner item={null} />
                 </TiltCard>
-              ))
-            ) : (
-              <TiltCard
-                intensity={8}
+              )}
+
+              {/* Badge status dari statistik nyata */}
+              <div
                 style={{
-                  backgroundColor: "#F6F3EA",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  boxShadow: "0 12px 40px rgba(28,43,34,0.15)",
-                  marginBottom: 16,
+                  marginTop: 16,
+                  backgroundColor: "#1C2B22",
+                  borderRadius: 14,
+                  padding: "14px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  boxShadow: "0 8px 32px rgba(28,43,34,0.3)",
                 }}
-                className="float-card-0"
               >
-                <HeroCardInner item={null} />
-              </TiltCard>
-            )}
-            {/* Badge status dari statistik nyata */}
-            <div
-              style={{
-                marginTop: 16,
-                backgroundColor: "#1C2B22",
-                borderRadius: 14,
-                padding: "14px 18px",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                boxShadow: "0 8px 32px rgba(28,43,34,0.3)",
-              }}
-            >
-              <div style={{ position: "relative", width: 10, height: 10, flexShrink: 0 }}>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "50%",
-                    backgroundColor: "#22c55e",
-                    animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
-                  }}
-                />
                 <div
                   style={{
                     position: "relative",
                     width: 10,
                     height: 10,
-                    borderRadius: "50%",
-                    backgroundColor: "#22c55e",
+                    flexShrink: 0,
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      backgroundColor: "#22c55e",
+                      animation:
+                        "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "relative",
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      backgroundColor: "#22c55e",
+                    }}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.75rem",
+                    color: "#F6F3EA",
+                    fontWeight: 500,
+                  }}
+                >
+                  {jumlahTersedia != null ? (
+                    <>
+                      <span
+                        style={{ color: "#6bba91", fontWeight: 700 }}
+                      >
+                        {jumlahTersedia}
+                      </span>{" "}
+                      listing tersedia
+                    </>
+                  ) : (
+                    "Lihat listing terbaru"
+                  )}
+                </span>
               </div>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "0.75rem",
-                  color: "#F6F3EA",
-                  fontWeight: 500,
-                }}
-              >
-                {jumlahTersedia != null ? (
-                  <>
-                    <span style={{ color: "#6bba91", fontWeight: 700 }}>
-                      {jumlahTersedia}
-                    </span>{" "}
-                    listing tersedia
-                  </>
-                ) : (
-                  "Lihat listing terbaru"
-                )}
-              </span>
+
+              {adaSumber && (
+                <div style={{ marginTop: 12, textAlign: "right" }}>
+                  <SourceLabel
+                    tanggal={statistik?.tanggal_pembaruan ?? null}
+                    color="#8C9184"
+                  />
+                </div>
+              )}
             </div>
-            {adaSumber && (
-              <div style={{ marginTop: 12, textAlign: "right" }}>
-                <SourceLabel
-                  tanggal={statistik?.tanggal_pembaruan ?? null}
-                  color="#8C9184"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
+
       <style>{`
-        .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 24px 0 32px; }
-        .hero-partner-logos { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 54px; margin-top: 32px; }
-        .hero-partner-logos img { height: 75px; width: auto; object-fit: contain; opacity: 1; filter: none; transition: filter 0.2s ease, opacity 0.2s ease; }
-        .hero-partner-logos img.hero-partner-tall { height: 96px; }
-        .hero-partner-logos img:hover { filter: brightness(1.06); }
-        .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
-        .hero-cards { display: flex; flex-direction: column; position: relative; z-index: 3; }
-        .hero-blob-1, .hero-blob-2 { display: block; }
-        .hero-blob-mobile { display: none; }
-        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        .hero-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 48px;
+          align-items: center;
+          padding: 24px 0 32px;
+        }
+        .hero-partner-logos {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 54px;
+        }
+        .hero-partner-logos img {
+          height: 75px;
+          width: auto;
+          object-fit: contain;
+          opacity: 1;
+          filter: none;
+          transition: filter 0.2s ease, opacity 0.2s ease;
+        }
+        .hero-partner-logos img.hero-partner-tall {
+          height: 96px;
+        }
+        .hero-partner-logos img:hover {
+          filter: brightness(1.06);
+        }
+        .hero-ctas {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .hero-cards {
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          z-index: 3;
+        }
+        @keyframes ping {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
         @media (max-width: 767px) {
-          .hero-viewport { min-height: calc(100vh - 150px); min-height: calc(100dvh - 150px); }
-          .hero-grid { grid-template-columns: 1fr; gap: 32px; padding: 20px 0 32px; }
-          .hero-partner-logos { gap: 33px; margin-top: 28px; }
-          .hero-partner-logos img { height: 51px; }
-          .hero-partner-logos img.hero-partner-tall { height: 60px; }
-          .hero-blob-1, .hero-blob-2 { display: none; }
-          .hero-blob-mobile { display: block; }
-          .hero-ctas { flex-direction: column; }
-          .hero-ctas a { width: 100%; justify-content: center; }
-          .float-card-0, .float-card-1 { margin-left: 0 !important; }
+          .hero-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+            padding: 20px 0 32px;
+          }
+          .hero-partner-logos {
+            gap: 33px;
+          }
+          .hero-partner-logos img {
+            height: 51px;
+          }
+          .hero-partner-logos img.hero-partner-tall {
+            height: 60px;
+          }
+          .hero-ctas {
+            flex-direction: column;
+          }
+          .hero-ctas a {
+            width: 100%;
+            justify-content: center;
+          }
+          .float-card-0, .float-card-1 {
+            margin-left: 0 !important;
+          }
         }
         @media (min-width: 768px) and (max-width: 1023px) {
-          .hero-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 20px 0 32px; }
+          .hero-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            padding: 20px 0 32px;
+          }
         }
       `}</style>
     </section>
@@ -367,9 +528,9 @@ export default function Hero({ loggedIn = false, data = null }) {
 }
 
 /* ─── Kartu hero ───
- * `item` null → versi ilustratif NETRAL (tanpa angka/nama mengada-ada) untuk
- * menjaga keseimbangan visual saat belum ada listing tersedia.
- * `item` nyata → judul, kategori, jumlah+satuan, waktu relatif dari DB.
+ * `item` null -> versi ilustratif NETRAL (tanpa angka/nama mengada-ada)
+ * untuk menjaga keseimbangan visual saat belum ada listing tersedia.
+ * `item` nyata -> judul, kategori, jumlah+satuan, waktu relatif dari DB.
  */
 function HeroCardInner({ item }) {
   if (!item) {
@@ -445,10 +606,15 @@ function HeroCardInner({ item }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "linear-gradient(135deg, #3C7A5C 0%, #DCE3D3 140%)",
+              background:
+                "linear-gradient(135deg, #3C7A5C 0%, #DCE3D3 140%)",
             }}
           >
-            <Package size={34} strokeWidth={1.4} color="rgba(246,243,234,0.85)" />
+            <Package
+              size={34}
+              strokeWidth={1.4}
+              color="rgba(246,243,234,0.85)"
+            />
           </div>
         )}
         <span
