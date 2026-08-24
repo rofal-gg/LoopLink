@@ -26,7 +26,7 @@ export default function Footer() {
     ],
     Kontak: [
       { label: "hello@looplink.id", href: "mailto:hello@looplink.id" },
-      { label: "Tentang Kami", href: "#beranda" },
+      { label: "Tentang Kami", href: "/tentang-kami" },
       { label: "Masuk", href: "/login" },
       { label: "Daftar", href: "/register" },
     ],
@@ -178,17 +178,17 @@ export default function Footer() {
             © {new Date().getFullYear()} LoopLink. Hak cipta dilindungi.
           </span>
           <div style={{ display: "flex", gap: 20 }}>
-            {["Kebijakan Privasi", "Syarat & Ketentuan", "Cookie"].map((l) => (
-              <span
-                key={l}
-                style={{
-                  color: "#6C7265",
-                  fontSize: "0.78rem",
-                }}
-              >
-                {l}
-              </span>
-            ))}
+            <Link href="/kebijakan-privasi" style={{ color: "#6C7265", fontSize: "0.78rem", textDecoration: "none", transition: "color 0.15s" }}
+              onMouseEnter={(e) => e.currentTarget.style.color = "#DCE3D3"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "#6C7265"}>
+              Kebijakan Privasi
+            </Link>
+            <Link href="/syarat-ketentuan" style={{ color: "#6C7265", fontSize: "0.78rem", textDecoration: "none", transition: "color 0.15s" }}
+              onMouseEnter={(e) => e.currentTarget.style.color = "#DCE3D3"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "#6C7265"}>
+              Syarat & Ketentuan
+            </Link>
+            <span style={{ color: "#6C7265", fontSize: "0.78rem" }}>Cookie</span>
           </div>
           <span style={{ color: "#8C9184", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: 6 }}>
             Dibuat dengan semangat daur ulang <Leaf size={13} color="#3C7A5C" strokeWidth={2} />

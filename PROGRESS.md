@@ -7,7 +7,7 @@
 
 ## Status Saat Ini
 
-**Fase aktif: Fase 6 — Deployment & Persiapan Demo** — Logo partner & wordmark LoopLink sudah dibersihkan dari semua halaman (Navbar, Footer, Auth, WhyLoopLink, AppHeader). Semua halaman sekarang hanya tampilkan logo mark tanpa teks. Menunggu: commit, deploy Vercel, env production, migration/seed production, test ulang.
+**Fase aktif: Fase 6 — Deployment & Persiapan Demo** — Logo partner & wordmark LoopLink sudah dibersihkan dari semua halaman. Halaman legal (Kebijakan Privasi, Syarat & Ketentuan) dan About (Tentang Kami) dengan foto tim sudah selesai. Menunggu: commit, deploy Vercel, env production, migration/seed production, test ulang.
 
 > ✅ **Fase 1 (Database & Supabase) SELESAI** — 10 migration + seed ter-apply, RLS aktif, 3 RPC terverifikasi, 2 gap schema (visibilitas pengklaim + FK cascade) sudah diperbaiki. **+1 migration bonus**: `202608140011_storage_listings.sql` (bucket storage publik `listings` + 4 policy, prasyarat 4.3).
 > ✅ **Fase 2 (AI/ML Integration) SELESAI** — 3 modul `lib/ai/` + test script; kontrak fungsi siap.
@@ -195,6 +195,14 @@
 | Auth | `<img>` via `.auth-mark` | ❌ Dihapus | 48px |
 | WhyLoopLink | `<img>` via `.why-mark` | ❌ Dihapus | 40px |
 | AppHeader | `<img>` via `.app-mark` | ❌ Dihapus | 40px |
+
+- ✅ **Halaman Legal & About** — 3 halaman baru dibuat oleh `design-taste-frontend`:
+  - `/kebijakan-privasi` — Kebijakan Privasi lengkap (9 section) dengan wave dividers, alternating backgrounds (cream→white→mist), cards dengan hover effects
+  - `/syarat-ketentuan` — Syarat & Ketentuan (10 section) dengan twist: section Transaksi pakai mini flow diagram, section Larangan pakai warning card, section Klasifikasi AI pakai accent ungu
+  - `/tentang-kami` — Halaman "Tentang Kami" dengan Visi & Misi, Cerita Kami (timeline), Teknologi (4 cards), Tim Kami (3 anggota dengan foto), CTA
+  - Footer di-update: link "Tentang Kami" sekarang mengarah ke `/tentang-kami` (sebelumnya `#beranda`)
+  - Semua halaman pakai Wave dividers, blob dekoratif, responsive, konsisten dengan design system landing page
+  - **Foto tim** di `public/Team/` (3 file: `M. Ainur Rofal Achsony.jpeg`, `Idham Kholid A.png`, `Restu Dwi Haqiqi.jpeg`) — avatar `object-fit: cover` + `object-position: top` agar wajah tidak terpotong
 
 - ⚠️ **Belum (lanjutan Fase 6):** commit aset + perubahan, deploy frontend ke Vercel, env production, migration/seed production, test ulang alur production, verifikasi HF live dari jaringan produksi.
 
